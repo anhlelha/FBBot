@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Chatbot - Admin Panel</title>
+  <meta name="description"
+    content="Hotel Chatbot Admin Panel - Manage knowledge base and Facebook Messenger integration">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">🏨</div>
+          <div class="logo-text">
+            <h1>Hotel Bot</h1>
+            <span class="logo-subtitle">Admin Panel</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-tab="dashboard" id="nav-dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="knowledge" id="nav-knowledge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+          <span>Knowledge Base</span>
+        </button>
+        <button class="nav-item" data-tab="chat" id="nav-chat">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>Chat Test</span>
+        </button>
+        <button class="nav-item" data-tab="settings" id="nav-settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-badge" id="server-status">
+          <div class="status-dot"></div>
+          <span>Đang kết nối...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Dashboard Tab -->
+      <section class="tab-content active" id="tab-dashboard">
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <p>Tổng quan hệ thống Hotel Chatbot</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-docs">0</span>
+              <span class="stat-label">Documents</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <rect x="2" y="2" width="20" height="20" rx="2" />
+                <path d="M7 7h10M7 12h10M7 17h6" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-chunks">0</span>
+              <span class="stat-label">Knowledge Chunks</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-ai">—</span>
+              <span class="stat-label">AI Status</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-fb">—</span>
+              <span class="stat-label">Facebook</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card info-card">
+          <h3>🔗 Webhook URL</h3>
+          <div class="webhook-url">
+            <code id="webhook-url">Loading...</code>
+            <button class="btn btn-sm btn-outline" onclick="copyWebhookUrl()" id="copy-webhook-btn">Copy</button>
+          </div>
+          <p class="help-text">Sử dụng URL này để cấu hình webhook trên Meta for Developers. Cần chạy ngrok để có URL
+            public.</p>
+        </div>
+
+        <div class="card info-card">
+          <h3>📋 Hướng dẫn nhanh</h3>
+          <ol class="setup-steps">
+            <li>Cấu hình <code>.env</code> với API keys</li>
+            <li>Chạy <code>npm start</code> để khởi động server</li>
+            <li>Chạy <code>ngrok http 3000</code> để lấy URL public</li>
+            <li>Config webhook URL trên <a href="https://developers.facebook.com" target="_blank">Meta for
+                Developers</a></li>
+            <li>Upload tài liệu khách sạn vào Knowledge Base</li>
+            <li>Test chat trước khi kết nối với Messenger</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Knowledge Base Tab -->
+      <section class="tab-content" id="tab-knowledge">
+        <div class="page-header">
+          <h2>Knowledge Base</h2>
+          <p>Upload tài liệu để AI sử dụng khi trả lời khách hàng</p>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="card upload-card">
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <h3>Kéo thả file vào đây</h3>
+            <p>hoặc click để chọn file</p>
+            <span class="upload-hint">Hỗ trợ: PDF, TXT, MD, CSV (tối đa 10MB)</span>
+            <input type="file" id="file-input" accept=".pdf,.txt,.md,.csv" hidden>
+          </div>
+          <div class="upload-progress" id="upload-progress" style="display: none;">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-text" id="progress-text">Đang tải lên...</span>
+          </div>
+        </div>
+
+        <!-- Document List -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📄 Tài liệu đã upload</h3>
+            <span class="badge" id="doc-count">0</span>
+          </div>
+          <div class="document-list" id="document-list">
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                opacity="0.4">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                <polyline points="13 2 13 9 20 9" />
+              </svg>
+              <p>Chưa có tài liệu nào. Upload tài liệu để bắt đầu.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chat Test Tab -->
+      <section class="tab-content" id="tab-chat">
+        <div class="page-header">
+          <h2>Chat Test</h2>
+          <p>Kiểm tra AI chatbot trước khi kết nối với Facebook Messenger</p>
+        </div>
+
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+              <div class="message-avatar">🏨</div>
+              <div class="message-content">
+                <p>Xin chào! Tôi là Hotel Bot. Hãy hỏi tôi bất cứ điều gì về khách sạn. 😊</p>
+                <span class="message-time">Bot</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <form class="chat-input-wrapper" id="chat-form">
+              <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+              <button type="submit" class="send-btn" id="send-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section class="tab-content" id="tab-settings">
+        <div class="page-header">
+          <h2>Settings</h2>
+          <p>Cấu hình hành vi của AI chatbot</p>
+        </div>
+
+        <div class="card">
+          <h3>🤖 System Prompt</h3>
+          <p class="help-text" style="margin-bottom: 16px;">
+            Hướng dẫn cho AI về cách trả lời tin nhắn. AI sẽ tuân theo hướng dẫn này khi phản hồi khách hàng.
+          </p>
+          <textarea class="prompt-textarea" id="system-prompt" rows="8" placeholder="Nhập system prompt..."></textarea>
+          <div class="card-actions">
+            <button class="btn btn-primary" onclick="saveSettings()" id="save-settings-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Lưu thay đổi
+            </button>
+            <button class="btn btn-outline" onclick="resetPrompt()" id="reset-prompt-btn">Reset về mặc định</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🔑 Trạng thái cấu hình</h3>
+          <div class="config-status">
+            <div class="config-item">
+              <span>Gemini API Key</span>
+              <span class="config-badge" id="cfg-gemini">Đang kiểm tra...</span>
+            </div>
+            <div class="config-item">
+              <span>Facebook Page Token</span>
+              <span class="config-badge" id="cfg-fb-token">Đang kiểm tra...</span>
+            </div>
+            <div class="config-item">
+              <span>Facebook App Secret</span>
+              <span class="config-badge" id="cfg-fb-secret">Đang kiểm tra...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
