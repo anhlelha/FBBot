@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4All — Owner Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        .tenant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .tenant-table th,
+        .tenant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tenant-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .tenant-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        .badge-suspended {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--color-danger);
+        }
+
+        .badge-trial {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--color-info);
+        }
+
+        .badge-basic {
+            background: rgba(255, 153, 0, 0.15);
+            color: var(--color-primary);
+        }
+
+        .badge-whitelist {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        .whitelist-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .whitelist-form input {
+            flex: 1;
+        }
+
+        .whitelist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            margin-bottom: 8px;
+        }
+
+        .whitelist-email {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .whitelist-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .whitelist-note {
+            padding: 16px;
+            background: rgba(255, 153, 0, 0.06);
+            border: 1px solid rgba(255, 153, 0, 0.2);
+            border-radius: var(--border-radius-md);
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .whitelist-note strong {
+            color: var(--color-primary);
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: var(--font-family);
+            transition: all 0.15s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .action-btn.danger:hover {
+            border-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="/" class="sidebar-logo">
+                <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg></div>
+                <div>
+                    <div class="logo-text">AI4All</div>
+                    <div class="logo-sub">Owner Admin</div>
+                </div>
+            </a>
+            <nav class="sidebar-nav">
+                <div class="nav-group-label">Platform</div>
+                <a href="#" class="nav-item active" data-page="overview">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Tổng quan
+                </a>
+                <a href="#" class="nav-item" data-page="tenants">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Quản lý Tenants
+                </a>
+                <div class="nav-group-label">Cấu hình</div>
+                <a href="#" class="nav-item" data-page="whitelist">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <polyline points="17 11 19 13 23 9" />
+                    </svg>
+                    Whitelist Emails
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">👑</div>
+                    <div class="user-details">
+                        <div class="user-name" id="ownerEmail">Loading...</div>
+                        <div class="user-plan">OWNER</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn" title="Đăng xuất">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <!-- Overview -->
+            <div id="page-overview" class="page active">
+                <header class="page-header">
+                    <h1>Platform Overview</h1>
+                    <p class="page-subtitle">Tổng quan nền tảng AI4All</p>
+                </header>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Tenants</div>
+                        <div class="stat-value" id="oStatTotal">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active</div>
+                        <div class="stat-value" id="oStatActive">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Tokens Used</div>
+                        <div class="stat-value" id="oStatTokens">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Whitelist Emails</div>
+                        <div class="stat-value" id="oStatWhitelist">—</div>
+                    </div>
+                </div>
+                <div class="settings-section" style="margin-top:24px">
+                    <h3>Tenants gần đây</h3>
+                    <table class="tenant-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Tên</th>
+                                <th>Plan</th>
+                                <th>Tokens</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTenants"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tenants -->
+            <div id="page-tenants" class="page">
+                <header class="page-header">
+                    <h1>Quản lý Tenants</h1>
+                    <p class="page-subtitle">Quản lý tất cả khách sạn trên nền tảng</p>
+                </header>
+                <div class="settings-section">
+                    <table class="tenant-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Tên</th>
+                                <th>Plan</th>
+                                <th>Tokens</th>
+                                <th>Status</th>
+                                <th>FB</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTenants"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Whitelist -->
+            <div id="page-whitelist" class="page">
+                <header class="page-header">
+                    <h1>Whitelist Emails</h1>
+                    <p class="page-subtitle">Email được whitelist sẽ có plan Unlimited miễn phí</p>
+                </header>
+                <div class="settings-section">
+                    <h3>Thêm email mới</h3>
+                    <div class="whitelist-form">
+                        <input type="email" id="whitelistInput" class="form-input" placeholder="email@gmail.com">
+                        <button class="btn btn-primary" id="addWhitelistBtn">Thêm</button>
+                    </div>
+                    <div id="whitelistList"></div>
+                    <div class="whitelist-note">
+                        <strong>💡 Cách hoạt động:</strong> Khi user có email trong whitelist đăng nhập, hệ thống tự
+                        động tạo tenant với plan <strong>whitelist</strong> (unlimited tokens, unlimited documents,
+                        không cần thanh toán).
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            // Auth check (owner only)
+            async function checkAuth() {
+                try {
+                    const res = await fetch('/api/auth/me');
+                    const data = await res.json();
+                    if (!res.ok || !data.isOwner) { window.location.href = '/'; return; }
+                    document.getElementById('ownerEmail').textContent = data.tenant.email;
+                    loadOverview();
+                    loadTenants();
+                    loadWhitelist();
+                } catch (e) { window.location.href = '/'; }
+            }
+
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.getElementById('page-' + item.dataset.page).classList.add('active');
+                });
+            });
+
+            // Overview
+            async function loadOverview() {
+                const [statsRes, wlRes] = await Promise.all([
+                    fetch('/api/owner/stats'),
+                    fetch('/api/owner/whitelist'),
+                ]);
+                const stats = await statsRes.json();
+                const wl = await wlRes.json();
+
+                document.getElementById('oStatTotal').textContent = stats.total;
+                document.getElementById('oStatActive').textContent = stats.active;
+                document.getElementById('oStatTokens').textContent = stats.totalTokens.toLocaleString();
+                document.getElementById('oStatWhitelist').textContent = wl.length;
+            }
+
+            // Tenants
+            async function loadTenants() {
+                const res = await fetch('/api/owner/tenants');
+                const tenants = await res.json();
+
+                const renderRow = (t, showActions) => `
+        <tr>
+          <td>${t.email}</td>
+          <td>${t.name}</td>
+          <td><span class="badge badge-${t.plan}">${t.plan}</span></td>
+          <td>${t.tokens_used.toLocaleString()} / ${t.token_limit.toLocaleString()}</td>
+          <td><span class="badge badge-${t.status}">${t.status}</span></td>
+          ${showActions ? `
+            <td>${t.fbConnected ? '✅' : '—'}</td>
+            <td>
+              ${t.status === 'active'
+                            ? `<button class="action-btn danger" onclick="toggleTenant('${t.id}','suspended')">Suspend</button>`
+                            : `<button class="action-btn" onclick="toggleTenant('${t.id}','active')">Activate</button>`
+                        }
+            </td>
+          ` : ''}
+        </tr>`;
+
+                document.getElementById('recentTenants').innerHTML = tenants.slice(0, 5).map(t => renderRow(t, false)).join('');
+                document.getElementById('allTenants').innerHTML = tenants.map(t => renderRow(t, true)).join('');
+            }
+
+            window.toggleTenant = async function (id, status) {
+                await fetch('/api/owner/tenants/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status }),
+                });
+                loadTenants();
+                loadOverview();
+            };
+
+            // Whitelist
+            async function loadWhitelist() {
+                const res = await fetch('/api/owner/whitelist');
+                const list = await res.json();
+                document.getElementById('whitelistList').innerHTML = list.map(e => `
+        <div class="whitelist-item">
+          <div>
+            <div class="whitelist-email">${e.email}</div>
+            <div class="whitelist-meta">Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}</div>
+          </div>
+          <button class="action-btn danger" onclick="removeWhitelist('${e.email}')">Xoá</button>
+        </div>
+      `).join('');
+            }
+
+            document.getElementById('addWhitelistBtn').addEventListener('click', async () => {
+                const email = document.getElementById('whitelistInput').value.trim();
+                if (!email) return;
+                const res = await fetch('/api/owner/whitelist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('whitelistInput').value = '';
+                    loadWhitelist();
+                    loadOverview();
+                } else {
+                    alert(data.error);
+                }
+            });
+
+            window.removeWhitelist = async function (email) {
+                if (!confirm(`Xoá ${email} khỏi whitelist?`)) return;
+                const res = await fetch('/api/owner/whitelist/' + encodeURIComponent(email), { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) { loadWhitelist(); loadOverview(); }
+                else alert(data.error);
+            };
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            });
+
+            checkAuth();
+        })();
+    </script>
+</body>
+
+</html>

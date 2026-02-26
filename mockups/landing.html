@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4All — AI Chatbot Platform for Hotels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #ff9900;
+            --color-primary-dark: #ec7211;
+            --color-primary-light: #ffb84d;
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-elevated: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --color-success: #3fb950;
+            --color-info: #58a6ff;
+            --border-color: #30363d;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --border-radius-xl: 16px;
+            --shadow-glow: 0 0 40px rgba(255, 153, 0, 0.2);
+            --font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ─── Navbar ─── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .navbar-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .navbar-logo-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: #000;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .navbar-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--border-radius-md);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: #000;
+            box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .btn-lg {
+            padding: 14px 32px;
+            font-size: 16px;
+            border-radius: var(--border-radius-lg);
+        }
+
+        /* ─── Hero ─── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 48px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255, 153, 0, 0.08), transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid rgba(255, 153, 0, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-primary);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 540px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            background: #fff;
+            color: #333;
+            border-radius: var(--border-radius-lg);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ─── Features ─── */
+        .features {
+            padding: 100px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .section-title p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-xl);
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(255, 153, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-icon.orange {
+            background: rgba(255, 153, 0, 0.15);
+            color: var(--color-primary);
+        }
+
+        .feature-icon.blue {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--color-info);
+        }
+
+        .feature-icon.green {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ─── How it works ─── */
+        .how-it-works {
+            padding: 100px 48px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .steps-grid {
+            display: flex;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: #000;
+            font-weight: 700;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .step h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ─── Pricing ─── */
+        .pricing {
+            padding: 100px 48px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .price-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-xl);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-card.featured {
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-glow);
+            position: relative;
+        }
+
+        .price-card.featured::before {
+            content: 'Phổ biến';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-primary);
+            color: #000;
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .price-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .price-amount {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .price-amount span {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .price-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .price-features {
+            list-style: none;
+            flex: 1;
+            margin-bottom: 24px;
+        }
+
+        .price-features li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-features li::before {
+            content: '✓';
+            color: var(--color-success);
+            font-weight: 700;
+        }
+
+        /* ─── Footer ─── */
+        .footer {
+            padding: 48px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .features-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-grid {
+                flex-direction: column;
+            }
+
+            .navbar {
+                padding: 12px 20px;
+            }
+
+            .hero,
+            .features,
+            .pricing {
+                padding: 60px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="navbar-logo">
+            <div class="navbar-logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16" />
+                    <path d="M10 9h4M10 13h4M10 17h4" />
+                </svg>
+            </div>
+            <span class="navbar-logo-text">AI4All</span>
+        </a>
+        <div class="navbar-actions">
+            <a href="#features" class="btn btn-ghost">Tính năng</a>
+            <a href="#pricing" class="btn btn-ghost">Bảng giá</a>
+            <button class="btn btn-primary" onclick="alert('Google OAuth popup will appear here')">Đăng nhập</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div>
+            <div class="hero-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg> AI-Powered Hotel Chatbot Platform</div>
+            <h1>Biến FB Messenger thành <span>Lễ tân AI</span> cho khách sạn</h1>
+            <p class="hero-desc">Tự động trả lời khách hàng 24/7, quản lý đặt phòng, và tăng doanh thu với AI thông
+                minh. Setup trong 5 phút.</p>
+            <div class="hero-cta">
+                <button class="google-btn" onclick="alert('Google Sign-In flow → create tenant → redirect /dashboard')">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Đăng ký bằng Google
+                </button>
+                <a href="#features" class="btn btn-ghost btn-lg">Tìm hiểu thêm →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="section-title">
+            <h2>Tại sao chọn AI4All?</h2>
+            <p>Giải pháp chatbot toàn diện cho ngành khách sạn</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon orange"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 8V4H8" />
+                        <rect x="2" y="2" width="20" height="20" rx="2" />
+                        <path d="m18 14-4 4-4-4" />
+                        <path d="M12 18V12h4" />
+                    </svg></div>
+                <h3>AI Agent thông minh</h3>
+                <p>Sử dụng Google Gemini để trả lời khách hàng tự nhiên, chính xác dựa trên dữ liệu phòng và giá của
+                    bạn.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        <line x1="8" y1="7" x2="16" y2="7" />
+                        <line x1="8" y1="11" x2="13" y2="11" />
+                    </svg></div>
+                <h3>Knowledge Base (RAG)</h3>
+                <p>Upload tài liệu phòng, giá, chính sách — AI tự động học và trả lời chính xác theo dữ liệu của bạn.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg></div>
+                <h3>Facebook Messenger</h3>
+                <p>Kết nối FB Page của bạn trong 2 phút. Khách hàng nhắn tin → AI tự động trả lời 24/7.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                    </svg></div>
+                <h3>Custom Tools</h3>
+                <p>Tìm phòng trống, tạo đặt phòng, hướng dẫn thanh toán — AI tự biết khi nào dùng tool nào.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <polyline points="17 11 19 13 23 9" />
+                    </svg></div>
+                <h3>Hand-off nhân viên</h3>
+                <p>Khi cần, AI tự động chuyển cho nhân viên thật. Không bỏ lỡ bất kỳ yêu cầu nào.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <line x1="3" y1="9" x2="21" y2="9" />
+                        <line x1="9" y1="21" x2="9" y2="9" />
+                    </svg></div>
+                <h3>Dashboard quản lý</h3>
+                <p>Theo dõi đặt phòng, doanh thu, hội thoại AI — tất cả trong một dashboard đẹp mắt.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works">
+        <div class="section-title">
+            <h2>Bắt đầu trong 3 bước</h2>
+            <p>Setup nhanh, không cần kiến thức lập trình</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Đăng ký bằng Google</h3>
+                <p>Tạo tài khoản miễn phí, không cần thẻ tín dụng</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Upload dữ liệu & kết nối FB</h3>
+                <p>Upload thông tin phòng/giá và kết nối FB Page của bạn</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>AI bắt đầu trả lời khách</h3>
+                <p>Chatbot tự động hoạt động 24/7 trên Messenger</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="section-title">
+            <h2>Bảng giá</h2>
+            <p>Linh hoạt cho mọi quy mô khách sạn</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="price-card">
+                <div class="price-name">Trial</div>
+                <div class="price-amount">Miễn phí</div>
+                <div class="price-desc">Dùng thử 14 ngày</div>
+                <ul class="price-features">
+                    <li>1 FB Page</li>
+                    <li>500 tin nhắn/tháng</li>
+                    <li>5 tài liệu upload</li>
+                    <li>AI Gemini Flash</li>
+                </ul>
+                <button class="btn btn-ghost" style="width:100%">Bắt đầu miễn phí</button>
+            </div>
+            <div class="price-card featured">
+                <div class="price-name">Basic</div>
+                <div class="price-amount">499K <span>/tháng</span></div>
+                <div class="price-desc">Cho khách sạn nhỏ-vừa</div>
+                <ul class="price-features">
+                    <li>1 FB Page</li>
+                    <li>5,000 tin nhắn/tháng</li>
+                    <li>20 tài liệu upload</li>
+                    <li>AI Gemini Flash</li>
+                    <li>Live Chat hand-off</li>
+                </ul>
+                <button class="btn btn-primary" style="width:100%">Chọn gói Basic</button>
+            </div>
+            <div class="price-card">
+                <div class="price-name">Pro</div>
+                <div class="price-amount">999K <span>/tháng</span></div>
+                <div class="price-desc">Cho chuỗi khách sạn</div>
+                <ul class="price-features">
+                    <li>3 FB Pages</li>
+                    <li>Unlimited tin nhắn</li>
+                    <li>Unlimited tài liệu</li>
+                    <li>AI Gemini Pro</li>
+                    <li>Custom tools</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="btn btn-ghost" style="width:100%">Chọn gói Pro</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 AI4All. AI Chatbot Platform for Hotels.</p>
+    </footer>
+</body>
+
+</html>

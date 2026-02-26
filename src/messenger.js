@@ -1,17 +1,13 @@
 const config = require('./config');
 
-/**
- * Send a text message via Facebook Messenger Send API
- */
-async function sendMessage(recipientId, text) {
+async function sendMessage(recipientId, text, pageAccessToken) {
     const url = 'https://graph.facebook.com/v21.0/me/messages';
-
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.FB_PAGE_ACCESS_TOKEN}`,
+                'Authorization': `Bearer ${pageAccessToken}`,
             },
             body: JSON.stringify({
                 recipient: { id: recipientId },
@@ -20,31 +16,27 @@ async function sendMessage(recipientId, text) {
             }),
         });
 
-        const data = await response.json();
         if (!response.ok) {
-            console.error('❌ FB Send API error:', data.error);
-        } else {
-            console.log('✅ Message sent to:', recipientId);
+            const error = await response.json();
+            console.error('❌ Messenger API error:', error);
+            throw new Error(error.error?.message || 'Failed to send message');
         }
-        return data;
+
+        return await response.json();
     } catch (error) {
         console.error('❌ Failed to send message:', error.message);
         throw error;
     }
 }
 
-/**
- * Send typing indicator to show the bot is processing
- */
-async function sendTypingIndicator(recipientId, action = 'typing_on') {
+async function sendTypingIndicator(recipientId, action, pageAccessToken) {
     const url = 'https://graph.facebook.com/v21.0/me/messages';
-
     try {
         await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.FB_PAGE_ACCESS_TOKEN}`,
+                'Authorization': `Bearer ${pageAccessToken}`,
             },
             body: JSON.stringify({
                 recipient: { id: recipientId },
@@ -52,8 +44,22 @@ async function sendTypingIndicator(recipientId, action = 'typing_on') {
             }),
         });
     } catch (error) {
-        console.error('❌ Failed to send typing indicator:', error.message);
+        console.error('⚠️ Typing indicator error:', error.message);
     }
 }
 
-module.exports = { sendMessage, sendTypingIndicator };
+async function getPageInfo(pageAccessToken) {
+    try {
+        const response = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${pageAccessToken}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Invalid token');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('❌ Failed to get page info:', error.message);
+        throw error;
+    }
+}
+
+module.exports = { sendMessage, sendTypingIndicator, getPageInfo };

@@ -1,101 +1,83 @@
 const express = require('express');
 const config = require('./config');
 const messenger = require('./messenger');
-const ai = require('./ai');
+const tenantManager = require('./tenantManager');
 
 const router = express.Router();
 
-/**
- * GET /webhook - Verification endpoint
- * Facebook sends a GET request to verify the webhook URL
- */
+// Webhook verification (GET)
 router.get('/', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
     if (mode === 'subscribe' && token === config.FB_VERIFY_TOKEN) {
-        console.log('✅ Webhook verified successfully');
+        console.log('✅ Webhook verified');
         return res.status(200).send(challenge);
     }
 
-    console.warn('❌ Webhook verification failed. Token mismatch.');
-    return res.sendStatus(403);
+    console.warn('⚠️ Webhook verification failed');
+    res.sendStatus(403);
 });
 
-/**
- * POST /webhook - Receive message events from Facebook
- */
+// Webhook events (POST) — single endpoint, route by page_id
 router.post('/', async (req, res) => {
     const body = req.body;
 
-    // DEBUG: Log everything received
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📨 POST /webhook received at:', new Date().toISOString());
-    console.log('📨 Body object:', body.object);
-    console.log('📨 Full body:', JSON.stringify(body, null, 2));
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    // Verify this is a page subscription
     if (body.object !== 'page') {
-        console.log('⚠️ Not a page event, returning 404. Object:', body.object);
         return res.sendStatus(404);
     }
 
-    // Return 200 immediately to prevent timeout
-    res.status(200).send('EVENT_RECEIVED');
+    // Respond immediately to FB (avoid timeout)
+    res.sendStatus(200);
 
-    // Process each entry
     for (const entry of body.entry || []) {
-        console.log('📋 Entry ID:', entry.id);
-        console.log('📋 Messaging events:', (entry.messaging || []).length);
+        const pageId = entry.id;
+
+        // Lookup tenant by page_id
+        const tenantFb = tenantManager.getTenantByPageId(pageId);
+        if (!tenantFb) {
+            console.warn(`⚠️ No tenant found for page_id: ${pageId}`);
+            continue;
+        }
+
         for (const event of entry.messaging || []) {
-            await handleMessageEvent(event);
+            await handleMessageEvent(event, tenantFb);
         }
     }
 });
 
-/**
- * Handle individual message events
- */
-async function handleMessageEvent(event) {
+async function handleMessageEvent(event, tenantFb) {
     const senderId = event.sender?.id;
     if (!senderId) return;
 
-    // Handle text messages
+    // Skip echo messages
+    if (event.message?.is_echo) return;
+
+    const token = tenantFb.page_access_token;
+
     if (event.message?.text) {
         const userMessage = event.message.text;
-        console.log(`📩 Message from ${senderId}: "${userMessage}"`);
+        const tenantId = tenantFb.tenant_id;
+
+        console.log(`💬 [${tenantFb.name}] Message from ${senderId}: ${userMessage.substring(0, 50)}...`);
 
         try {
-            // Show typing indicator
-            await messenger.sendTypingIndicator(senderId, 'typing_on');
+            await messenger.sendTypingIndicator(senderId, 'typing_on', token);
 
-            // Generate AI response
-            const reply = await ai.generateResponse(userMessage);
-            console.log(`🤖 Reply: "${reply.substring(0, 100)}..."`);
+            const reply = await tenantManager.generateResponseForTenant(tenantId, userMessage);
 
-            // Send response
-            await messenger.sendMessage(senderId, reply);
+            await messenger.sendMessage(senderId, reply, token);
+            await messenger.sendTypingIndicator(senderId, 'typing_off', token);
 
-            // Turn off typing
-            await messenger.sendTypingIndicator(senderId, 'typing_off');
+            console.log(`✅ [${tenantFb.name}] Reply sent to ${senderId}`);
         } catch (error) {
-            console.error('❌ Error handling message:', error.message);
+            console.error(`❌ [${tenantFb.name}] Error handling message:`, error.message);
             try {
-                await messenger.sendMessage(senderId, 'Xin lỗi, tôi gặp sự cố. Vui lòng thử lại sau.');
-            } catch (sendError) {
-                console.error('❌ Failed to send error message:', sendError.message);
+                await messenger.sendMessage(senderId, 'Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau.', token);
+            } catch (e) {
+                // ignore send error
             }
-        }
-    }
-
-    // Handle attachments (images, files, etc.)
-    if (event.message?.attachments) {
-        try {
-            await messenger.sendMessage(senderId, 'Cảm ơn bạn đã gửi file. Hiện tại tôi chỉ có thể xử lý tin nhắn văn bản. Vui lòng gõ câu hỏi của bạn.');
-        } catch (error) {
-            console.error('❌ Error handling attachment:', error.message);
         }
     }
 }

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Booking Admin - Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mockup-nav {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--border-color);
+      z-index: 9999;
+      box-shadow: var(--shadow-lg);
+      flex-wrap: wrap;
+      max-width: 600px;
+    }
+
+    .mockup-nav-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .mockup-nav-btn:hover {
+      background: var(--bg-hover);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .mockup-nav-btn.active {
+      background: var(--color-primary);
+      color: #000;
+      border-color: var(--color-primary);
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .handoff-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr 300px;
+      gap: 0;
+      height: calc(100vh - 140px);
+    }
+
+    .handoff-list {
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+    }
+
+    .handoff-item {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      gap: var(--space-sm);
+      align-items: flex-start;
+    }
+
+    .handoff-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .handoff-item.active {
+      background: rgba(255, 153, 0, 0.1);
+      border-left: 3px solid var(--color-primary);
+    }
+
+    .handoff-item.waiting {
+      background: rgba(210, 153, 34, 0.08);
+    }
+
+    .handoff-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .handoff-avatar.ai {
+      background: var(--color-info-bg);
+      color: var(--color-info);
+    }
+
+    .handoff-avatar.human {
+      background: rgba(255, 153, 0, 0.15);
+      color: var(--color-primary);
+    }
+
+    .handoff-avatar.waiting {
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+    }
+
+    .handoff-detail {
+      border-left: 1px solid var(--border-color);
+      padding: var(--space-lg);
+      overflow-y: auto;
+    }
+
+    .agent-config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    @media (max-width: 1200px) {
+      .handoff-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .agent-config-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* SVG Icon Support */
+    .logo-icon svg,
+    .nav-item-icon svg,
+    .stat-icon svg,
+    .upload-icon svg,
+    .chat-avatar svg,
+    .handoff-avatar svg,
+    .btn svg,
+    .tag svg {
+      width: 1em;
+      height: 1em;
+      stroke-width: 2;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .nav-item-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .stat-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .upload-icon svg {
+      width: 48px;
+      height: 48px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="logo">
+          <div class="logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16" />
+              <path d="M10 9h4M10 13h4M10 17h4" />
+            </svg>
+          </div>
+          <div>
+            <div class="logo-text">StayFlow</div>
+            <div class="logo-subtitle">Hotel Booking</div>
+          </div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Tổng quan</div>
+          <a href="#" class="nav-item active" data-page="dashboard">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="9" />
+                <rect x="14" y="3" width="7" height="5" />
+                <rect x="14" y="12" width="7" height="9" />
+                <rect x="3" y="16" width="7" height="5" />
+              </svg></span><span>Dashboard</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Quản lý</div>
+          <a href="#" class="nav-item" data-page="bookings">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg></span><span>Đặt phòng</span>
+            <span class="nav-item-badge">5</span>
+          </a>
+          <a href="#" class="nav-item" data-page="payments">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg></span><span>Thanh toán</span>
+          </a>
+          <a href="#" class="nav-item" data-page="livechat">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path
+                  d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg></span><span>Live Chat</span>
+            <span class="nav-item-badge">2</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">AI & Dữ liệu</div>
+          <a href="#" class="nav-item" data-page="knowledge">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg></span><span>Knowledge (RAG)</span>
+          </a>
+          <a href="#" class="nav-item" data-page="agent">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
+                <rect x="9" y="9" width="6" height="6" />
+                <path d="M9 1v3" />
+                <path d="M15 1v3" />
+                <path d="M9 20v3" />
+                <path d="M15 20v3" />
+                <path d="M20 9h3" />
+                <path d="M20 14h3" />
+                <path d="M1 9h3" />
+                <path d="M1 14h3" />
+              </svg></span><span>Agent Settings</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Cấu hình</div>
+          <a href="#" class="nav-item" data-page="settings">
+            <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg></span><span>Cài đặt</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <!-- ========== DASHBOARD ========== -->
+      <div id="dashboard" class="page active">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Dashboard</h1>
+              <p class="page-subtitle">Tổng quan hoạt động đặt phòng & chatbot hôm nay</p>
+            </div>
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-secondary">📥 Xuất báo cáo</button>
+              <button class="btn btn-primary">🔄 Sync dữ liệu</button>
+            </div>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path d="M21 10c0-7-9-13-11-6 0 0-2 1-2-3" />
+                  <path d="M3 10v11" />
+                  <path d="M21 10v11" />
+                  <path d="M8 10h8" />
+                  <path d="M8 10v11" />
+                  <path d="M16 10v11" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Đặt phòng hôm nay</div>
+                <div class="stat-change positive">↑ 3 so với hôm qua</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">45M</div>
+                <div class="stat-label">Doanh thu (VND)</div>
+                <div class="stat-change positive">↑ 12% tuần này</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon info"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path
+                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">38</div>
+                <div class="stat-label">Cuộc hội thoại</div>
+                <div class="stat-change positive">AI xử lý 92%</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon warning"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Chờ hand-off</div>
+                <div class="stat-change negative">Cần xử lý ngay</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Đặt phòng gần đây</h3>
+                <button class="btn btn-ghost btn-sm" data-page="bookings">Xem tất cả</button>
+              </div>
+              <div class="card-body" style="padding:0">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Mã đơn</th>
+                      <th>Khách</th>
+                      <th>Phòng</th>
+                      <th>Check-in</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>BK-001</td>
+                      <td>Nguyễn Văn A</td>
+                      <td>Deluxe</td>
+                      <td>15/03</td>
+                      <td><span class="tag success">Đã xác nhận</span></td>
+                    </tr>
+                    <tr>
+                      <td>BK-002</td>
+                      <td>Trần Thị B</td>
+                      <td>Suite</td>
+                      <td>16/03</td>
+                      <td><span class="tag warning">Chờ thanh toán</span></td>
+                    </tr>
+                    <tr>
+                      <td>BK-003</td>
+                      <td>Lê Hoàng C</td>
+                      <td>Standard</td>
+                      <td>15/03</td>
+                      <td><span class="tag success">Đã xác nhận</span></td>
+                    </tr>
+                    <tr>
+                      <td>BK-004</td>
+                      <td>Phạm Minh D</td>
+                      <td>Family</td>
+                      <td>18/03</td>
+                      <td><span class="tag info">Mới tạo</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Tình trạng phòng</h3>
+                <button class="btn btn-ghost btn-sm" data-page="knowledge">Cập nhật</button>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                      <span>Standard (800K/đêm)</span><span class="tag success">2 phòng trống</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:66%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                      <span>Deluxe (1.5M/đêm)</span><span class="tag warning">1 phòng trống</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:50%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                      <span>Suite (2.5M/đêm)</span><span class="tag success">1 phòng trống</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:100%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                      <span>Presidential (5M/đêm)</span><span class="tag info">Sắp trống 25/02</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== BOOKINGS ========== -->
+      <div id="bookings" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Quản lý Đặt phòng</h1>
+              <p class="page-subtitle">Xem, xác nhận hoặc hủy các đơn đặt phòng</p>
+            </div>
+            <div style="display:flex;gap:12px">
+              <select class="form-input form-select" style="width:180px">
+                <option>Tất cả trạng thái</option>
+                <option>Đã xác nhận</option>
+                <option>Chờ thanh toán</option>
+                <option>Đã hủy</option>
+              </select>
+              <input type="text" class="form-input" placeholder="Tìm theo tên KH..." style="width:220px">
+            </div>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="card">
+            <div class="card-body" style="padding:0">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Loại phòng</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>BK-001</td>
+                    <td>Nguyễn Văn A</td>
+                    <td>Deluxe</td>
+                    <td>15/03/2026</td>
+                    <td>17/03/2026</td>
+                    <td>3,000,000₫</td>
+                    <td><span class="tag info">Stripe</span></td>
+                    <td><span class="tag success">Đã xác nhận</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Chi tiết</button></td>
+                  </tr>
+                  <tr>
+                    <td>BK-002</td>
+                    <td>Trần Thị B</td>
+                    <td>Suite</td>
+                    <td>16/03/2026</td>
+                    <td>18/03/2026</td>
+                    <td>5,000,000₫</td>
+                    <td><span class="tag warning">Chuyển khoản</span></td>
+                    <td><span class="tag warning">Chờ TT</span></td>
+                    <td><button class="btn btn-success btn-sm">Xác nhận</button></td>
+                  </tr>
+                  <tr>
+                    <td>BK-003</td>
+                    <td>Lê Hoàng C</td>
+                    <td>Standard</td>
+                    <td>15/03/2026</td>
+                    <td>16/03/2026</td>
+                    <td>800,000₫</td>
+                    <td><span class="tag info">Stripe</span></td>
+                    <td><span class="tag success">Đã xác nhận</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Chi tiết</button></td>
+                  </tr>
+                  <tr>
+                    <td>BK-004</td>
+                    <td>Phạm Minh D</td>
+                    <td>Family</td>
+                    <td>18/03/2026</td>
+                    <td>20/03/2026</td>
+                    <td>4,000,000₫</td>
+                    <td><span class="tag">Chưa TT</span></td>
+                    <td><span class="tag info">Mới tạo</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Chi tiết</button> <button
+                        class="btn btn-danger btn-sm">Hủy</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== LIVE CHAT (HAND-OFF) ========== -->
+      <div id="livechat" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Live Chat – Hand-off</h1>
+              <p class="page-subtitle">Quản lý hội thoại giữa AI và nhân viên</p>
+            </div>
+          </div>
+        </header>
+        <div class="page-body" style="padding:0;height:calc(100vh - 140px)">
+          <div class="handoff-layout" style="height:100%">
+            <div class="handoff-list">
+              <div style="padding:var(--space-md);border-bottom:1px solid var(--border-color)">
+                <input type="text" class="form-input" placeholder="Tìm hội thoại..." style="font-size:13px">
+              </div>
+              <div class="handoff-item waiting">
+                <div class="handoff-avatar waiting"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:500;font-size:14px">Nguyễn Văn E</div>
+                  <div
+                    style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                    "Tôi muốn gặp nhân viên..."</div>
+                  <span class="tag warning" style="margin-top:4px">Chờ nhân viên</span>
+                </div>
+              </div>
+              <div class="handoff-item active">
+                <div class="handoff-avatar human"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:500;font-size:14px">Trần Thị F</div>
+                  <div
+                    style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                    "Cảm ơn nhân viên Minh..."</div>
+                  <span class="tag primary" style="margin-top:4px">Đang chat với NV</span>
+                </div>
+              </div>
+              <div class="handoff-item">
+                <div class="handoff-avatar ai"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                    <polyline points="2 17 12 22 22 17" />
+                    <polyline points="2 12 12 17 22 12" />
+                  </svg></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:500;font-size:14px">Lê Văn G</div>
+                  <div
+                    style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                    "OK, tôi đặt phòng Deluxe"</div>
+                  <span class="tag info" style="margin-top:4px">AI đang xử lý</span>
+                </div>
+              </div>
+              <div class="handoff-item">
+                <div class="handoff-avatar ai"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                    <polyline points="2 17 12 22 22 17" />
+                    <polyline points="2 12 12 17 22 12" />
+                  </svg></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:500;font-size:14px">Phạm Thị H</div>
+                  <div style="font-size:12px;color:var(--text-muted)">"Cho tôi hỏi giá phòng..."</div>
+                  <span class="tag info" style="margin-top:4px">AI đang xử lý</span>
+                </div>
+              </div>
+            </div>
+            <div class="chat-panel" style="border-radius:0;border:none;border-right:1px solid var(--border-color)">
+              <div class="chat-header">
+                <div class="chat-avatar" style="background:linear-gradient(135deg,var(--color-primary),#e88800)"><svg
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg></div>
+                <div class="chat-info">
+                  <div class="chat-name">Trần Thị F</div>
+                  <div class="chat-status">● Đang online</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-secondary btn-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <polyline points="15 14 20 9 15 4" />
+                      <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+                    </svg> Trả lại AI</button>
+                  <button class="btn btn-success btn-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg> Đã giải quyết</button>
+                </div>
+              </div>
+              <div class="chat-messages">
+                <div class="chat-message assistant">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🤖 Bot Mai · 14:20</div>
+                  Chào bạn! Tôi là Mai, lễ tân ảo của Sunshine Hotel. Tôi có thể giúp gì cho bạn?
+                </div>
+                <div class="chat-message user">Tôi muốn đặt phòng cho 2 người lớn, ngày 15/3</div>
+                <div class="chat-message assistant">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🤖 Bot Mai · 14:21</div>
+                  Dạ, phòng Deluxe 1.5M/đêm rất phù hợp ạ. Bạn muốn ở mấy đêm?
+                </div>
+                <div class="chat-message user">Tôi có yêu cầu đặc biệt, cho tôi gặp nhân viên</div>
+                <div class="chat-message assistant">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🤖 Bot Mai · 14:22</div>
+                  Dạ, tôi đang chuyển bạn cho nhân viên hỗ trợ. Xin vui lòng chờ trong giây lát ạ!
+                </div>
+                <div style="text-align:center;padding:var(--space-md);color:var(--text-muted);font-size:13px">
+                  ── Chuyển sang Nhân viên Minh · 14:23 ──
+                </div>
+                <div class="chat-message assistant"
+                  style="background:rgba(255,153,0,0.15);border-left:3px solid var(--color-primary)">
+                  <div style="font-size:11px;color:var(--color-primary);margin-bottom:4px">👤 NV Minh · 14:23</div>
+                  Xin chào chị F! Tôi là Minh. Chị có yêu cầu đặc biệt gì ạ?
+                </div>
+                <div class="chat-message user">Tôi cần phòng có view biển và bồn tắm riêng, liệu có phòng trống không?
+                </div>
+                <div class="chat-message assistant"
+                  style="background:rgba(255,153,0,0.15);border-left:3px solid var(--color-primary)">
+                  <div style="font-size:11px;color:var(--color-primary);margin-bottom:4px">👤 NV Minh · 14:25</div>
+                  Dạ có ạ! Phòng Deluxe 201 tầng 2 view biển trực diện, có bồn tắm riêng. Chị muốn đặt phòng này không
+                  ạ?
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="Nhập tin nhắn cho khách...">
+                <button class="btn btn-primary">Gửi</button>
+              </div>
+            </div>
+            <div class="handoff-detail">
+              <h3 style="font-size:16px;margin-bottom:var(--space-lg)">Thông tin khách</h3>
+              <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted)">Tên</div>
+                  <div style="font-weight:500">Trần Thị F</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted)">FB Messenger ID</div>
+                  <div style="font-weight:500">fb_12345678</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted)">Trạng thái</div><span class="tag primary">Human
+                    mode</span>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted)">Nhân viên phụ trách</div>
+                  <div style="font-weight:500">Minh</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted)">Lý do hand-off</div>
+                  <div style="font-weight:500">KH yêu cầu gặp nhân viên</div>
+                </div>
+              </div>
+              <hr style="border:none;border-top:1px solid var(--border-color);margin:var(--space-lg) 0">
+              <h3 style="font-size:16px;margin-bottom:var(--space-md)">Booking liên quan</h3>
+              <div style="padding:var(--space-md);background:var(--bg-tertiary);border-radius:var(--border-radius-md)">
+                <div style="font-size:13px;color:var(--text-muted)">Chưa có booking</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">KH đang trao đổi yêu cầu đặc biệt
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== KNOWLEDGE (RAG) ========== -->
+      <div id="knowledge" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Knowledge Management (RAG)</h1>
+              <p class="page-subtitle">Upload & quản lý dữ liệu phòng, giá, tài khoản ngân hàng cho AI</p>
+            </div>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom:24px">
+                <div class="card-body">
+                  <div class="upload-zone">
+                    <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                      </svg></div>
+                    <div class="upload-text">Kéo thả file Excel vào đây hoặc click để chọn</div>
+                    <div class="upload-hint">Hỗ trợ file .xlsx chứa dữ liệu phòng, giá, tài khoản</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Dữ liệu hiện tại</h3><span class="tag success">Đã sync</span>
+                </div>
+                <div class="card-body" style="padding:0">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Sheet</th>
+                        <th>Số bản ghi</th>
+                        <th>Cập nhật lần cuối</th>
+                        <th>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>RoomTypes</td>
+                        <td>5 loại phòng</td>
+                        <td>11/02/2026 10:00</td>
+                        <td><span class="tag success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg> Synced</span></td>
+                      </tr>
+                      <tr>
+                        <td>Availability</td>
+                        <td>8 phòng</td>
+                        <td>11/02/2026 10:00</td>
+                        <td><span class="tag success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg> Synced</span></td>
+                      </tr>
+                      <tr>
+                        <td>BankInfo</td>
+                        <td>2 tài khoản</td>
+                        <td>11/02/2026 10:00</td>
+                        <td><span class="tag success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg> Synced</span></td>
+                      </tr>
+                      <tr>
+                        <td>HotelInfo</td>
+                        <td>8 mục</td>
+                        <td>11/02/2026 10:00</td>
+                        <td><span class="tag success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg> Synced</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-footer" style="display:flex;gap:12px">
+                  <button class="btn btn-primary">🔄 Sync lại dữ liệu</button>
+                  <button class="btn btn-secondary">📥 Tải Excel mẫu</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Sync History</h3>
+              </div>
+              <div class="card-body">
+                <div class="processing-status">
+                  <div class="processing-step">
+                    <div class="processing-step-icon complete"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg></div>
+                    <span class="processing-step-text">Đọc file sample_rooms.xlsx</span>
+                  </div>
+                  <div class="processing-step">
+                    <div class="processing-step-icon complete"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg></div>
+                    <span class="processing-step-text">Parse 4 sheets: RoomTypes, Availability, BankInfo,
+                      HotelInfo</span>
+                  </div>
+                  <div class="processing-step">
+                    <div class="processing-step-icon complete"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg></div>
+                    <span class="processing-step-text">Chuyển đổi thành 15 text chunks</span>
+                  </div>
+                  <div class="processing-step">
+                    <div class="processing-step-icon complete"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg></div>
+                    <span class="processing-step-text">Xóa archival memory cũ</span>
+                  </div>
+                  <div class="processing-step">
+                    <div class="processing-step-icon complete"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg></div>
+                    <span class="processing-step-text">Upload 15 chunks vào Letta Agent</span>
+                  </div>
+                </div>
+                <div
+                  style="margin-top:24px;padding:16px;background:var(--color-success-bg);border-radius:var(--border-radius-md)">
+                  <div style="font-weight:500;color:var(--color-success)"><svg xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24" style="width:1.2em;height:1.2em;vertical-align:text-bottom">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg> Sync hoàn tất</div>
+                  <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">15 text chunks đã được cập nhật
+                    vào bộ nhớ Agent lúc 10:00 11/02/2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== AGENT SETTINGS ========== -->
+      <div id="agent" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Agent Settings</h1>
+              <p class="page-subtitle">Cấu hình AI Agent chatbot – tính cách, tools, và hành vi</p>
+            </div>
+            <button class="btn btn-primary">💾 Lưu cấu hình</button>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="agent-config-grid">
+            <div>
+              <div class="card" style="margin-bottom:24px">
+                <div class="card-header">
+                  <h3 class="card-title">Persona (Tính cách Bot)</h3>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label class="form-label">Tên Bot</label>
+                    <input type="text" class="form-input" value="Mai">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">System Prompt</label>
+                    <textarea class="form-input form-textarea" style="min-height:200px">Bạn là nhân viên lễ tân ảo của Sunshine Hotel. Tên bạn là Mai.
+Nhiệm vụ: Hỗ trợ khách hàng đặt phòng, tư vấn loại phòng phù hợp, và hướng dẫn thanh toán.
+
+Nguyên tắc:
+1. Luôn thân thiện, lịch sự, chuyên nghiệp
+2. Hỏi rõ: ngày check-in, số đêm, số khách, loại phòng mong muốn
+3. Tra cứu phòng trống trước khi đề xuất
+4. Sau khi khách đồng ý, tạo đơn đặt phòng và hướng dẫn thanh toán
+5. Nếu khách yêu cầu gặp nhân viên hoặc có vấn đề phức tạp → hand-off
+6. Không bịa thông tin. Chỉ dùng dữ liệu từ search_rooms.</textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">LLM Model</label>
+                    <select class="form-input form-select">
+                      <option selected>letta/letta-free</option>
+                      <option>openai/gpt-4o</option>
+                      <option>anthropic/claude-3.5-sonnet</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Thông tin Agent hiện tại</h3>
+                </div>
+                <div class="card-body">
+                  <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+                    <div class="settings-item">
+                      <div class="settings-item-info">
+                        <div class="settings-item-label">Agent ID</div>
+                        <div class="settings-item-desc">agent-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
+                      </div>
+                      <span class="tag success">Active</span>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-info">
+                        <div class="settings-item-label">Archival Memory</div>
+                        <div class="settings-item-desc">15 chunks từ sample_rooms.xlsx</div>
+                      </div>
+                      <span class="tag info">Synced</span>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-info">
+                        <div class="settings-item-label">Letta Server</div>
+                        <div class="settings-item-desc">http://localhost:8283</div>
+                      </div>
+                      <span class="tag success">Connected</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Custom Tools</h3>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+                  <div class="settings-item">
+                    <div class="settings-item-info">
+                      <div class="settings-item-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                          viewBox="0 0 24 24" style="vertical-align:text-bottom;margin-right:4px">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg> search_rooms</div>
+                      <div class="settings-item-desc">Tìm phòng trống theo ngày & loại phòng</div>
+                    </div>
+                    <div class="toggle active"></div>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-info">
+                      <div class="settings-item-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                          viewBox="0 0 24 24" style="vertical-align:text-bottom;margin-right:4px">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg> create_booking</div>
+                      <div class="settings-item-desc">Tạo đơn đặt phòng mới</div>
+                    </div>
+                    <div class="toggle active"></div>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-info">
+                      <div class="settings-item-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                          viewBox="0 0 24 24" style="vertical-align:text-bottom;margin-right:4px">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                          <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg> create_payment</div>
+                      <div class="settings-item-desc">Tạo link Stripe hoặc hiện TK chuyển khoản</div>
+                    </div>
+                    <div class="toggle active"></div>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-info">
+                      <div class="settings-item-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                          viewBox="0 0 24 24" style="vertical-align:text-bottom;margin-right:4px">
+                          <polyline points="23 4 23 10 17 10" />
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg> request_human_handoff</div>
+                      <div class="settings-item-desc">Chuyển hội thoại cho nhân viên</div>
+                    </div>
+                    <div class="toggle active"></div>
+                  </div>
+                </div>
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:var(--space-lg) 0">
+                <h4 style="font-size:14px;margin-bottom:var(--space-md)">Cấu hình thanh toán</h4>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label">Stripe Integration</div>
+                    <div class="settings-item-desc">Thanh toán trực tuyến qua Stripe</div>
+                  </div>
+                  <div class="toggle active"></div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label">Chuyển khoản ngân hàng</div>
+                    <div class="settings-item-desc">Hiện thông tin TK khi KH chọn CK</div>
+                  </div>
+                  <div class="toggle active"></div>
+                </div>
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:var(--space-lg) 0">
+                <h4 style="font-size:14px;margin-bottom:var(--space-md)">Hand-off Settings</h4>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label">Auto hand-off khi lỗi</div>
+                    <div class="settings-item-desc">Tự động chuyển cho NV khi AI gặp lỗi 3 lần liên tiếp</div>
+                  </div>
+                  <div class="toggle active"></div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label">Thông báo email</div>
+                    <div class="settings-item-desc">Gửi email cho NV khi có hand-off mới</div>
+                  </div>
+                  <div class="toggle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAYMENTS ========== -->
+      <div id="payments" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Quản lý Thanh toán</h1>
+              <p class="page-subtitle">Theo dõi trạng thái thanh toán Stripe & chuyển khoản</p>
+            </div>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Đã thanh toán</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon warning"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Chờ xác nhận CK</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon info"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">18M</div>
+                <div class="stat-label">Qua Stripe (VND)</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg></div>
+              <div class="stat-content">
+                <div class="stat-value">27M</div>
+                <div class="stat-label">Qua Chuyển khoản</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body" style="padding:0">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Payment ID</th>
+                    <th>Booking</th>
+                    <th>Phương thức</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>PAY-001</td>
+                    <td>BK-001</td>
+                    <td><span class="tag info">Stripe</span></td>
+                    <td>3,000,000₫</td>
+                    <td><span class="tag success">Thành công</span></td>
+                    <td>11/02 10:30</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>PAY-002</td>
+                    <td>BK-002</td>
+                    <td><span class="tag warning">Chuyển khoản</span></td>
+                    <td>5,000,000₫</td>
+                    <td><span class="tag warning">Chờ xác nhận</span></td>
+                    <td>11/02 11:00</td>
+                    <td><button class="btn btn-success btn-sm">Xác nhận CK</button></td>
+                  </tr>
+                  <tr>
+                    <td>PAY-003</td>
+                    <td>BK-003</td>
+                    <td><span class="tag info">Stripe</span></td>
+                    <td>800,000₫</td>
+                    <td><span class="tag success">Thành công</span></td>
+                    <td>11/02 09:15</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SETTINGS ========== -->
+      <div id="settings" class="page">
+        <header class="page-header">
+          <div class="page-header-content">
+            <div>
+              <h1 class="page-title">Cài đặt</h1>
+              <p class="page-subtitle">Cấu hình kết nối Facebook, Stripe, và hệ thống</p>
+            </div>
+            <button class="btn btn-primary">💾 Lưu cài đặt</button>
+          </div>
+        </header>
+        <div class="page-body">
+          <div class="settings-section">
+            <h3 class="settings-section-title">🔗 Facebook Messenger</h3>
+            <div class="form-group"><label class="form-label">Page Access Token</label><input type="password"
+                class="form-input" value="EAAxxxxxxxxxxxxxxx" placeholder="Paste Page Access Token"></div>
+            <div class="form-group"><label class="form-label">App Secret</label><input type="password"
+                class="form-input" value="xxxxxxxxxxxxxxx"></div>
+            <div class="form-group"><label class="form-label">Verify Token</label><input type="text" class="form-input"
+                value="hotel_booking_verify_2024"></div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-label">Webhook Status</div>
+                <div class="settings-item-desc">https://xxxx.ngrok-free.app/webhook/messenger</div>
+              </div><span class="tag success">Connected</span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title">💳 Stripe</h3>
+            <div class="form-group"><label class="form-label">Secret Key</label><input type="password"
+                class="form-input" value="sk_test_xxxxxxx"></div>
+            <div class="form-group"><label class="form-label">Webhook Secret</label><input type="password"
+                class="form-input" value="whsec_xxxxxxx"></div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-label">Chế độ</div>
+                <div class="settings-item-desc">Đang ở chế độ Test Mode</div>
+              </div><span class="tag warning">Test Mode</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Mockup Navigation -->
+  <div class="mockup-nav">
+    <button class="mockup-nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="mockup-nav-btn" data-page="bookings">Đặt phòng</button>
+    <button class="mockup-nav-btn" data-page="payments">Thanh toán</button>
+    <button class="mockup-nav-btn" data-page="livechat">Live Chat</button>
+    <button class="mockup-nav-btn" data-page="knowledge">Knowledge</button>
+    <button class="mockup-nav-btn" data-page="agent">Agent</button>
+    <button class="mockup-nav-btn" data-page="settings">Cài đặt</button>
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = btn.dataset.page;
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(page).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+        document.querySelectorAll('.mockup-nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (!btn.classList.contains('mockup-nav-btn')) {
+          document.querySelector(`.mockup-nav-btn[data-page="${page}"]`)?.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

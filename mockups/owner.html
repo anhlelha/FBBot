@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4All — Owner Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .mockup-nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            z-index: 9999;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .mockup-nav-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .mockup-nav-btn:hover {
+            background: var(--bg-hover);
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .mockup-nav-btn.active {
+            background: var(--color-primary);
+            color: #000;
+            border-color: var(--color-primary);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .nav-item-icon svg,
+        .stat-icon svg,
+        .logo-icon svg {
+            width: 1em;
+            height: 1em;
+            stroke-width: 2;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-item-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .stat-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .whitelist-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .whitelist-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .whitelist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+        }
+
+        .whitelist-item-email {
+            font-weight: 500;
+        }
+
+        .whitelist-item-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 20px;
+            background: rgba(255, 153, 0, 0.15);
+            color: var(--color-primary);
+        }
+
+        .whitelist-remove {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+
+        .whitelist-remove:hover {
+            color: var(--color-error);
+        }
+
+        .tenant-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--color-primary);
+        }
+
+        .owner-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(255, 153, 0, 0.15);
+            border-radius: var(--border-radius-md);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16" />
+                            <path d="M10 9h4M10 13h4M10 17h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="logo-text">AI4All</div>
+                        <div class="logo-subtitle">Owner Admin</div>
+                    </div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Platform</div>
+                    <a href="#" class="nav-item active" data-page="overview">
+                        <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="7" height="9" />
+                                <rect x="14" y="3" width="7" height="5" />
+                                <rect x="14" y="12" width="7" height="9" />
+                                <rect x="3" y="16" width="7" height="5" />
+                            </svg></span><span>Tổng quan</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="tenants">
+                        <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg></span><span>Quản lý Tenants</span>
+                        <span class="nav-item-badge">8</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cấu hình</div>
+                    <a href="#" class="nav-item" data-page="whitelist">
+                        <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg></span><span>Whitelist Emails</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="platform-settings">
+                        <span class="nav-item-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg></span><span>Platform Settings</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- ========== OVERVIEW ========== -->
+            <div id="overview" class="page active">
+                <header class="page-header">
+                    <div class="page-header-content">
+                        <div>
+                            <div class="owner-badge">👑 Owner: anhle.lha@gmail.com</div>
+                            <h1 class="page-title">Platform Overview</h1>
+                            <p class="page-subtitle">Tổng quan hoạt động nền tảng AI4All</p>
+                        </div>
+                    </div>
+                </header>
+                <div class="page-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                </svg></div>
+                            <div class="stat-content">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">Tổng Tenants</div>
+                                <div class="stat-change positive">↑ 3 tuần này</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                </svg></div>
+                            <div class="stat-content">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Active</div>
+                                <div class="stat-change positive">75% active rate</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon info"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path
+                                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                </svg></div>
+                            <div class="stat-content">
+                                <div class="stat-value">1,248</div>
+                                <div class="stat-label">Tổng tin nhắn AI</div>
+                                <div class="stat-change positive">↑ 24% tuần này</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg></div>
+                            <div class="stat-content">
+                                <div class="stat-value">245K</div>
+                                <div class="stat-label">Tokens consumed</div>
+                                <div class="stat-change">Tổng tất cả tenants</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tenants gần đây</h3>
+                            <button class="btn btn-ghost btn-sm" data-page="tenants">Xem tất cả</button>
+                        </div>
+                        <div class="card-body" style="padding:0">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Email</th>
+                                        <th>Plan</th>
+                                        <th>Token usage</th>
+                                        <th>FB Page</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">SH</div>Sunshine Hotel
+                                            </div>
+                                        </td>
+                                        <td>sunshine@gmail.com</td>
+                                        <td><span class="tag primary">Basic</span></td>
+                                        <td>3,200 / 50,000</td>
+                                        <td><span class="tag success">✓ Connected</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>20/02/2026</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">PR</div>Paradise Resort
+                                            </div>
+                                        </td>
+                                        <td>paradise@gmail.com</td>
+                                        <td><span class="tag info">Pro</span></td>
+                                        <td>12,500 / ∞</td>
+                                        <td><span class="tag success">✓ Connected</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>18/02/2026</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">AL</div>Anh Le Hotel
+                                            </div>
+                                        </td>
+                                        <td>anhle.lha@gmail.com</td>
+                                        <td><span class="whitelist-item-tag">🛡 Whitelist</span></td>
+                                        <td>820 / ∞</td>
+                                        <td><span class="tag success">✓ Connected</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>15/02/2026</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">BH</div>Beach House
+                                            </div>
+                                        </td>
+                                        <td>beach@gmail.com</td>
+                                        <td><span class="tag">Trial</span></td>
+                                        <td>150 / 5,000</td>
+                                        <td><span class="tag warning">✗ Not set</span></td>
+                                        <td><span class="tag warning">Trial</span></td>
+                                        <td>24/02/2026</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TENANTS ========== -->
+            <div id="tenants" class="page">
+                <header class="page-header">
+                    <div class="page-header-content">
+                        <div>
+                            <h1 class="page-title">Quản lý Tenants</h1>
+                            <p class="page-subtitle">Xem, kích hoạt, tạm ngưng và điều chỉnh hạn mức cho từng tenant</p>
+                        </div>
+                        <div style="display:flex;gap:12px">
+                            <select class="form-input form-select" style="width:160px">
+                                <option>Tất cả plans</option>
+                                <option>Trial</option>
+                                <option>Basic</option>
+                                <option>Pro</option>
+                                <option>Whitelist</option>
+                            </select>
+                            <input type="text" class="form-input" placeholder="Tìm theo email..." style="width:240px">
+                        </div>
+                    </div>
+                </header>
+                <div class="page-body">
+                    <div class="card">
+                        <div class="card-body" style="padding:0">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Email</th>
+                                        <th>Plan</th>
+                                        <th>Token limit</th>
+                                        <th>Tokens used</th>
+                                        <th>Documents</th>
+                                        <th>FB Page</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">SH</div>Sunshine Hotel
+                                            </div>
+                                        </td>
+                                        <td>sunshine@gmail.com</td>
+                                        <td><span class="tag primary">Basic</span></td>
+                                        <td>50,000</td>
+                                        <td>3,200</td>
+                                        <td>4</td>
+                                        <td><span class="tag success">✓</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm">Chi tiết</button>
+                                            <button class="btn btn-danger btn-sm">Suspend</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">PR</div>Paradise Resort
+                                            </div>
+                                        </td>
+                                        <td>paradise@gmail.com</td>
+                                        <td><span class="tag info">Pro</span></td>
+                                        <td>∞</td>
+                                        <td>12,500</td>
+                                        <td>12</td>
+                                        <td><span class="tag success">✓</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm">Chi tiết</button>
+                                            <button class="btn btn-danger btn-sm">Suspend</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">AL</div>Anh Le Hotel
+                                            </div>
+                                        </td>
+                                        <td>anhle.lha@gmail.com</td>
+                                        <td><span class="whitelist-item-tag">🛡 Whitelist</span></td>
+                                        <td>∞</td>
+                                        <td>820</td>
+                                        <td>2</td>
+                                        <td><span class="tag success">✓</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm">Chi tiết</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">BH</div>Beach House
+                                            </div>
+                                        </td>
+                                        <td>beach@gmail.com</td>
+                                        <td><span class="tag">Trial</span></td>
+                                        <td>5,000</td>
+                                        <td>150</td>
+                                        <td>1</td>
+                                        <td><span class="tag warning">✗</span></td>
+                                        <td><span class="tag warning">Trial</span></td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm">Chi tiết</button>
+                                            <button class="btn btn-success btn-sm">Activate</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <div class="tenant-avatar">MH</div>Mountain Hill
+                                            </div>
+                                        </td>
+                                        <td>mountain@gmail.com</td>
+                                        <td><span class="tag primary">Basic</span></td>
+                                        <td>50,000</td>
+                                        <td>48,200</td>
+                                        <td>8</td>
+                                        <td><span class="tag success">✓</span></td>
+                                        <td><span class="tag success">Active</span></td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm">Chi tiết</button>
+                                            <button class="btn btn-secondary btn-sm">↑ Token</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== WHITELIST ========== -->
+            <div id="whitelist" class="page">
+                <header class="page-header">
+                    <div class="page-header-content">
+                        <div>
+                            <h1 class="page-title">Email Whitelist</h1>
+                            <p class="page-subtitle">Các Gmail trong whitelist được truy cập dashboard miễn phí, không
+                                giới hạn token</p>
+                        </div>
+                    </div>
+                </header>
+                <div class="page-body">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card" style="margin-bottom:24px">
+                                <div class="card-header">
+                                    <h3 class="card-title">Thêm email vào whitelist</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">
+                                        Email trong whitelist khi đăng nhập sẽ tự động được cấp plan <strong
+                                            style="color:var(--color-primary)">Unlimited</strong> — không cần thanh
+                                        toán, không giới hạn token và tài liệu.
+                                    </p>
+                                    <div class="whitelist-input-row">
+                                        <input type="email" class="form-input" placeholder="email@gmail.com"
+                                            style="flex:1">
+                                        <button class="btn btn-primary">+ Thêm</button>
+                                    </div>
+                                    <div style="font-size:12px;color:var(--text-muted)">
+                                        💡 Tip: Thêm email của bạn, đối tác, hoặc khách hàng beta để họ dùng thử miễn
+                                        phí.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Danh sách Whitelist</h3>
+                                    <span class="tag primary">3 emails</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="whitelist-list">
+                                        <div class="whitelist-item">
+                                            <div>
+                                                <div class="whitelist-item-email">anhle.lha@gmail.com</div>
+                                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Owner
+                                                    · Thêm lúc tạo platform</div>
+                                            </div>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <span class="whitelist-item-tag">👑 Owner</span>
+                                            </div>
+                                        </div>
+                                        <div class="whitelist-item">
+                                            <div>
+                                                <div class="whitelist-item-email">partner.hotel@gmail.com</div>
+                                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Thêm
+                                                    20/02/2026</div>
+                                            </div>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <span class="whitelist-item-tag">🛡 Free access</span>
+                                                <button class="whitelist-remove" title="Xóa">✕</button>
+                                            </div>
+                                        </div>
+                                        <div class="whitelist-item">
+                                            <div>
+                                                <div class="whitelist-item-email">beta.tester@gmail.com</div>
+                                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Thêm
+                                                    22/02/2026</div>
+                                            </div>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                <span class="whitelist-item-tag">🛡 Free access</span>
+                                                <button class="whitelist-remove" title="Xóa">✕</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Cách whitelist hoạt động</h3>
+                            </div>
+                            <div class="card-body">
+                                <div style="display:flex;flex-direction:column;gap:24px">
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                                            <div
+                                                style="width:28px;height:28px;border-radius:50%;background:rgba(255,153,0,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--color-primary)">
+                                                1</div>
+                                            <div style="font-weight:600">Thêm email vào danh sách</div>
+                                        </div>
+                                        <div style="font-size:13px;color:var(--text-secondary);padding-left:40px">Nhập
+                                            địa chỉ Gmail của người bạn muốn cấp quyền miễn phí.</div>
+                                    </div>
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                                            <div
+                                                style="width:28px;height:28px;border-radius:50%;background:rgba(255,153,0,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--color-primary)">
+                                                2</div>
+                                            <div style="font-weight:600">Người dùng đăng nhập bằng Google</div>
+                                        </div>
+                                        <div style="font-size:13px;color:var(--text-secondary);padding-left:40px">Khi
+                                            email khớp whitelist, hệ thống tự tạo tenant với plan Unlimited.</div>
+                                    </div>
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                                            <div
+                                                style="width:28px;height:28px;border-radius:50%;background:rgba(255,153,0,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--color-primary)">
+                                                3</div>
+                                            <div style="font-weight:600">Truy cập đầy đủ tính năng</div>
+                                        </div>
+                                        <div style="font-size:13px;color:var(--text-secondary);padding-left:40px">Không
+                                            giới hạn token, tài liệu, tools — giống gói Pro nhưng miễn phí.</div>
+                                    </div>
+                                </div>
+
+                                <hr style="border:none;border-top:1px solid var(--border-color);margin:24px 0">
+
+                                <div
+                                    style="padding:16px;background:rgba(255,153,0,0.08);border-radius:var(--border-radius-md);border-left:3px solid var(--color-primary)">
+                                    <div
+                                        style="font-size:13px;font-weight:600;color:var(--color-primary);margin-bottom:4px">
+                                        💡 Use Cases</div>
+                                    <ul
+                                        style="font-size:13px;color:var(--text-secondary);padding-left:16px;line-height:1.8">
+                                        <li>Email của chính bạn (owner) để test</li>
+                                        <li>Đối tác kinh doanh để demo</li>
+                                        <li>Khách hàng beta để dùng thử</li>
+                                        <li>Nhân viên công ty</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PLATFORM SETTINGS ========== -->
+            <div id="platform-settings" class="page">
+                <header class="page-header">
+                    <div class="page-header-content">
+                        <div>
+                            <h1 class="page-title">Platform Settings</h1>
+                            <p class="page-subtitle">Cấu hình chung cho toàn bộ nền tảng StayFlow</p>
+                        </div>
+                        <button class="btn btn-primary">💾 Lưu cài đặt</button>
+                    </div>
+                </header>
+                <div class="page-body">
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">🔗 Facebook App</h3>
+                        <div class="form-group"><label class="form-label">App ID</label><input type="text"
+                                class="form-input" value="1234567890123456" placeholder="Facebook App ID"></div>
+                        <div class="form-group"><label class="form-label">App Secret</label><input type="password"
+                                class="form-input" value="xxxxxxxxxxxxxxxxxxxxxxxx"></div>
+                        <div class="form-group"><label class="form-label">Webhook Verify Token</label><input type="text"
+                                class="form-input" value="stayflow_verify_2026"></div>
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <div class="settings-item-label">Webhook URL</div>
+                                <div class="settings-item-desc">https://your-domain.com/webhook</div>
+                            </div><span class="tag success">Configured</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">🤖 Google Gemini</h3>
+                        <div class="form-group"><label class="form-label">Gemini API Key</label><input type="password"
+                                class="form-input" value="AIzaSyxxxxxxxxxxxxxxxxx"></div>
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <div class="settings-item-label">Default Model</div>
+                                <div class="settings-item-desc">gemini-2.5-flash (tenants có thể override)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">🔐 Google OAuth</h3>
+                        <div class="form-group"><label class="form-label">Client ID</label><input type="text"
+                                class="form-input" value="xxxxxxxxxxxx.apps.googleusercontent.com"></div>
+                        <div class="form-group"><label class="form-label">Owner Email</label><input type="email"
+                                class="form-input" value="anhle.lha@gmail.com" readonly style="opacity:0.7"></div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">📊 Default Limits</h3>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Trial token limit</label><input
+                                    type="number" class="form-input" value="5000"></div>
+                            <div class="form-group"><label class="form-label">Trial duration (days)</label><input
+                                    type="number" class="form-input" value="14"></div>
+                            <div class="form-group"><label class="form-label">Basic token limit</label><input
+                                    type="number" class="form-input" value="50000"></div>
+                            <div class="form-group"><label class="form-label">Max file size (MB)</label><input
+                                    type="number" class="form-input" value="10"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mockup Navigation -->
+    <div class="mockup-nav">
+        <button class="mockup-nav-btn active" data-page="overview">Overview</button>
+        <button class="mockup-nav-btn" data-page="tenants">Tenants</button>
+        <button class="mockup-nav-btn" data-page="whitelist">Whitelist</button>
+        <button class="mockup-nav-btn" data-page="platform-settings">Settings</button>
+    </div>
+
+    <script>
+        document.querySelectorAll('[data-page]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = btn.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(page).classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+                document.querySelectorAll('.mockup-nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (!btn.classList.contains('mockup-nav-btn')) {
+                    document.querySelector(`.mockup-nav-btn[data-page="${page}"]`)?.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
