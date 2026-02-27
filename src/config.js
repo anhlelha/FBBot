@@ -34,4 +34,29 @@ module.exports = {
   DEFAULT_TRIAL_TOKEN_LIMIT: parseInt(process.env.TRIAL_TOKEN_LIMIT) || 5000,
   DEFAULT_BASIC_TOKEN_LIMIT: parseInt(process.env.BASIC_TOKEN_LIMIT) || 50000,
   MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB
+
+  // SePay Payment
+  SEPAY_ENV: process.env.SEPAY_ENV || 'sandbox',
+  SEPAY_API_KEY: process.env.SEPAY_API_KEY || '',
+  SEPAY_BANK_ACCOUNT: process.env.SEPAY_BANK_ACCOUNT || '',
+  SEPAY_BANK_NAME: process.env.SEPAY_BANK_NAME || 'MBBank',
+  SEPAY_ACCOUNT_NAME: process.env.SEPAY_ACCOUNT_NAME || '',
+  get SEPAY_BASE_URL() {
+    return this.SEPAY_ENV === 'production'
+      ? 'https://my.sepay.vn/userapi'
+      : 'https://my.dev.sepay.vn/userapi';
+  },
+
+  // Plan Pricing (VND)
+  PLAN_BASIC_PRICE: parseInt(process.env.PLAN_BASIC_PRICE) || 200000,
+  PLAN_PRO_PRICE: parseInt(process.env.PLAN_PRO_PRICE) || 500000,
+  PLAN_BASIC_TOKENS: parseInt(process.env.PLAN_BASIC_TOKENS) || 50000,
+  PLAN_PRO_TOKENS: parseInt(process.env.PLAN_PRO_TOKENS) || 200000,
+
+  // Hand-off Keywords (Vietnamese)
+  HANDOFF_KEYWORDS: [
+    'gặp nhân viên', 'nói chuyện người thật', 'quản lý',
+    'hotline', 'tư vấn viên', 'nhân viên hỗ trợ',
+    'gặp người', 'nói chuyện với người', 'kết nối nhân viên',
+  ],
 };

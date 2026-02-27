@@ -54,17 +54,24 @@ async function generateResponseForTenant(tenantId, userMessage) {
         }
     }
 
-    const response = await ai.generateResponse(userMessage, tenantSettings.system_prompt, context);
+    const aiResult = await ai.generateResponse(userMessage, tenantSettings, context);
+    const responseText = aiResult.text;
 
-    // Estimate tokens and increment (rough: 1 token ≈ 4 chars)
-    const tokensUsed = Math.ceil((userMessage.length + response.length) / 4);
+    // Use PRECISE totalTokenCount from Gemini
+    let tokensUsed = aiResult.tokensUsed;
+
+    // Add estimation for embedding if query was made (approx 1 token per 4 chars for query)
+    if (vectorStore.size > 0) {
+        tokensUsed += Math.ceil(userMessage.length / 4);
+    }
+
     tenants.incrementTokens(tenantId, tokensUsed);
 
     // Refresh cached tenant data
     const updated = tenants.getById(tenantId);
     if (instance) instance.tenant = updated;
 
-    return response;
+    return responseText;
 }
 
 function getTenantByPageId(pageId) {

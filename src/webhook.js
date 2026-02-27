@@ -2,6 +2,8 @@ const express = require('express');
 const config = require('./config');
 const messenger = require('./messenger');
 const tenantManager = require('./tenantManager');
+const { conversations, notifications } = require('./database');
+const conversation = require('./conversation');
 
 const router = express.Router();
 
@@ -55,20 +57,70 @@ async function handleMessageEvent(event, tenantFb) {
     if (event.message?.is_echo) return;
 
     const token = tenantFb.page_access_token;
+    const tenantId = tenantFb.tenant_id;
 
     if (event.message?.text) {
         const userMessage = event.message.text;
-        const tenantId = tenantFb.tenant_id;
 
         console.log(`💬 [${tenantFb.name}] Message from ${senderId}: ${userMessage.substring(0, 50)}...`);
 
         try {
+            // Get or create conversation
+            const conv = conversations.getOrCreate(tenantId, senderId, null);
+
+            // Save incoming message
+            conversation.saveMessage(conv.id, 'guest', userMessage);
+
+            // Check conversation mode
+            if (conv.mode === 'human') {
+                // Human mode — just save message and notify, do NOT call AI
+                notifications.create(
+                    tenantId,
+                    'new_message',
+                    '💬 Tin nhắn mới',
+                    `Khách (${senderId}): "${userMessage.substring(0, 100)}"`,
+                    conv.id
+                );
+                console.log(`📨 [${tenantFb.name}] Message saved (human mode), notification created`);
+                return;
+            }
+
+            // AI mode — check for hand-off keywords first
+            const handoffKeyword = conversation.detectHandoff(userMessage);
+            if (handoffKeyword) {
+                conversation.triggerHandoff(conv.id, tenantId, `Khách yêu cầu: "${handoffKeyword}"`, senderId);
+
+                const handoffMsg = 'Cảm ơn bạn đã liên hệ! Tôi sẽ chuyển bạn đến nhân viên hỗ trợ. Vui lòng đợi trong giây lát, nhân viên sẽ phản hồi sớm nhất có thể. 🙏';
+                await messenger.sendMessage(senderId, handoffMsg, token);
+                conversation.saveMessage(conv.id, 'ai', handoffMsg);
+                return;
+            }
+
+            // Normal AI flow
             await messenger.sendTypingIndicator(senderId, 'typing_on', token);
 
             const reply = await tenantManager.generateResponseForTenant(tenantId, userMessage);
 
+            // Check if AI triggered hand-off via [HANDOFF] marker
+            if (conversation.checkAIHandoff(reply)) {
+                const cleanReply = conversation.cleanHandoffResponse(reply);
+                if (cleanReply) {
+                    await messenger.sendMessage(senderId, cleanReply, token);
+                    conversation.saveMessage(conv.id, 'ai', cleanReply);
+                }
+
+                conversation.triggerHandoff(conv.id, tenantId, 'AI không tự tin trả lời', senderId);
+
+                const handoffMsg = 'Tôi sẽ chuyển bạn đến nhân viên hỗ trợ để được tư vấn tốt hơn. Vui lòng đợi trong giây lát! 🙏';
+                await messenger.sendMessage(senderId, handoffMsg, token);
+                conversation.saveMessage(conv.id, 'ai', handoffMsg);
+                return;
+            }
+
+            // Normal reply
             await messenger.sendMessage(senderId, reply, token);
             await messenger.sendTypingIndicator(senderId, 'typing_off', token);
+            conversation.saveMessage(conv.id, 'ai', reply);
 
             console.log(`✅ [${tenantFb.name}] Reply sent to ${senderId}`);
         } catch (error) {

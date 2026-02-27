@@ -15,8 +15,8 @@
 | P0 | Owner admin panel | MVP |
 | P1 | Bookings management | Beta |
 | P1 | Live Chat hand-off | Beta |
-| P1 | Payments management | Beta |
-| P2 | Stripe integration | Production |
+| P1 | Payments management (SePay API) | Beta |
+| P2 | Real payment integration (SePay Webhook) | Production |
 | P2 | Custom domain per tenant | Production |
 
 ## Phase Breakdown
@@ -29,9 +29,14 @@
 ### Phase 2 — Beta
 - Bookings, Live Chat, Payments pages
 - Email notifications
+- SePay Integration (Bank Transfer Automation)
+- **RAG Pipeline Upgrade:**
+  - [ ] Persist vector embeddings vào SQLite (tránh mất khi restart)
+  - [ ] Thay Fixed-size chunking → Recursive Text Splitting (bảo toàn ngữ nghĩa)
+  - [ ] Đánh giá tích hợp ChromaDB khi scale >100 tenants
 
 ### Phase 3 — Production
-- Real payment (Stripe), Custom domains, Analytics
+- Custom domains, Analytics
 
 ## Task Checklist — Phase 1 (MVP)
 

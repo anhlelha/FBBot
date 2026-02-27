@@ -65,4 +65,17 @@ function requireOwner(req, res, next) {
     next();
 }
 
-module.exports = { verifyGoogleToken, handleGoogleLogin, isOwner, requireAuth, requireOwner };
+// Middleware: require owner (for UI routes, redirects to /)
+function requireOwnerRedirect(req, res, next) {
+    if (!req.session || !req.session.tenantId) {
+        return res.redirect('/');
+    }
+    const tenant = tenants.getById(req.session.tenantId);
+    if (!tenant || !isOwner(tenant.email)) {
+        return res.redirect('/');
+    }
+    req.tenant = tenant;
+    next();
+}
+
+module.exports = { verifyGoogleToken, handleGoogleLogin, isOwner, requireAuth, requireOwner, requireOwnerRedirect };

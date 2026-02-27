@@ -996,6 +996,61 @@ Nguyên tắc:
                 </div>
               </div>
             </div>
+            <!-- Guardrails Card -->
+            <div class="card" style="grid-column: 1 / -1;">
+              <div class="card-header">
+                <h3 class="card-title">Guardrails (Kiểm soát An toàn & Chủ đề)</h3>
+              </div>
+              <div class="card-body">
+                <div class="grid-2">
+                  <div>
+                    <h4 style="font-size:14px;margin-bottom:var(--space-md);color:var(--text-secondary)">Hard Guardrails
+                      (Platform Level)</h4>
+                    <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+                      <div class="settings-item" style="background:var(--bg-tertiary)">
+                        <div class="settings-item-info">
+                          <div class="settings-item-label">Anti-Prompt Injection</div>
+                          <div class="settings-item-desc">Ngăn chặn khách hàng dò rỉ System Prompt</div>
+                        </div>
+                        <span class="tag success">Bắt buộc</span>
+                      </div>
+                      <div class="settings-item" style="background:var(--bg-tertiary)">
+                        <div class="settings-item-info">
+                          <div class="settings-item-label">Safe Content Filter</div>
+                          <div class="settings-item-desc">Chặn nội dung độc hại, bạo lực, vi phạm pháp luật</div>
+                        </div>
+                        <span class="tag success">Bắt buộc</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 style="font-size:14px;margin-bottom:var(--space-md)">Soft Guardrails (Tenant Level)</h4>
+                    <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+                      <div class="settings-item">
+                        <div class="settings-item-info">
+                          <div class="settings-item-label">Topic Restriction (Giới hạn chủ đề)</div>
+                          <div class="settings-item-desc">Từ chối trả lời ngoài lề (toán học, code, chính trị...)</div>
+                        </div>
+                        <div class="toggle active"></div>
+                      </div>
+                      <div class="form-group" style="margin-top:var(--space-sm)">
+                        <label class="form-label">Chủ đề được phép (Whitelist)</label>
+                        <input type="text" class="form-input"
+                          value="Khách sạn, Đặt phòng, Du lịch, Giá cả, Ăn uống, Giải trí">
+                      </div>
+                      <div class="settings-item" style="margin-top:var(--space-md)">
+                        <div class="settings-item-info">
+                          <div class="settings-item-label">Bảo mật luồng thanh toán</div>
+                          <div class="settings-item-desc">Không cung cấp số tài khoản cá nhân, chỉ dùng cổng thanh toán
+                            chuẩn</div>
+                        </div>
+                        <div class="toggle active"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

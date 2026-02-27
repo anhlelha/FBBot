@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4All — Nâng cấp Plan (Mockup)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../public/dashboard.css">
+    <style>
+        /* ─── Pricing Cards ─── */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .plan-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            transition: all 0.25s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .plan-card.recommended {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 30px rgba(255, 153, 0, 0.15);
+        }
+
+        .plan-card.current {
+            border-color: var(--color-success);
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-badge.recommended {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: #000;
+        }
+
+        .plan-badge.current {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+        }
+
+        .plan-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .plan-icon.trial {
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .plan-icon.basic {
+            background: rgba(255, 153, 0, 0.1);
+        }
+
+        .plan-icon.pro {
+            background: rgba(210, 153, 34, 0.15);
+        }
+
+        .plan-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .plan-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .plan-price .currency {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .plan-price .period {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .plan-price.free {
+            color: var(--color-info);
+        }
+
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            margin: 24px 0;
+            padding: 0;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .plan-features .check {
+            color: var(--color-success);
+        }
+
+        .plan-features .cross {
+            color: var(--text-muted);
+        }
+
+        .plan-features .value {
+            margin-left: auto;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .plan-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--border-radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.15s;
+        }
+
+        .plan-btn.upgrade {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: #000;
+        }
+
+        .plan-btn.upgrade:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(255, 153, 0, 0.3);
+        }
+
+        .plan-btn.current-btn {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--color-success);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            cursor: default;
+        }
+
+        .plan-btn.disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        /* ─── QR Payment Modal ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 480px;
+            max-width: 95vw;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--color-danger);
+            border-color: var(--color-danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .qr-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .qr-wrapper img {
+            width: 220px;
+            height: 220px;
+            border-radius: 4px;
+        }
+
+        .payment-info {
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 16px;
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .payment-row:last-child {
+            border-bottom: none;
+        }
+
+        .payment-row .label {
+            color: var(--text-muted);
+        }
+
+        .payment-row .value {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.15s;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .payment-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: 12px 0;
+        }
+
+        .countdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(210, 153, 34, 0.1);
+            border: 1px solid rgba(210, 153, 34, 0.2);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            color: var(--color-warning);
+            font-weight: 500;
+        }
+
+        .countdown .timer {
+            font-size: 18px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-checking {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── Order History ─── */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .order-table th,
+        .order-table td {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .order-status.paid {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        .order-status.pending {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--color-warning);
+        }
+
+        .order-status.expired {
+            background: rgba(110, 118, 129, 0.15);
+            color: var(--text-muted);
+        }
+
+        /* ─── Current Plan Banner ─── */
+        .current-plan-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 24px;
+        }
+
+        .current-plan-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .current-plan-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 153, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .current-plan-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .current-plan-detail {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .usage-bar-wrap {
+            width: 200px;
+        }
+
+        .usage-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .usage-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .usage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar (same as livechat.html) -->
+        <aside class="sidebar">
+            <a href="#" class="sidebar-logo">
+                <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg></div>
+                <div>
+                    <div class="logo-text">AI4All</div>
+                    <div class="logo-sub">Dashboard</div>
+                </div>
+            </a>
+            <nav class="sidebar-nav">
+                <div class="nav-group-label">Chính</div>
+                <a href="#" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>Dashboard</a>
+                <a href="#" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>Knowledge Base</a>
+                <a href="livechat.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>Live Chat</a>
+                <a href="#" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                        <line x1="9" y1="9" x2="9.01" y2="9" />
+                        <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>Test Chat</a>
+                <div class="nav-group-label">Cài đặt</div>
+                <a href="#" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>Nâng cấp Plan</a>
+                <a href="#" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>Cài đặt</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AV</div>
+                    <div class="user-details">
+                        <div class="user-name">anhle.finos@gmail.com</div>
+                        <div class="user-plan">BASIC</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <header class="page-header">
+                <h1>⭐ Nâng cấp Plan</h1>
+                <p class="page-subtitle">Chọn gói phù hợp với nhu cầu kinh doanh của bạn</p>
+            </header>
+
+            <!-- Current Plan Banner -->
+            <div class="current-plan-banner">
+                <div class="current-plan-info">
+                    <div class="current-plan-icon">🚀</div>
+                    <div>
+                        <div class="current-plan-name">Basic Plan</div>
+                        <div class="current-plan-detail">Hạn sử dụng: 26/03/2026 · Thanh toán gần nhất: 26/02/2026</div>
+                    </div>
+                </div>
+                <div class="usage-bar-wrap">
+                    <div class="usage-label">
+                        <span>Token đã dùng</span>
+                        <span>12,450 / 50,000</span>
+                    </div>
+                    <div class="usage-bar">
+                        <div class="usage-bar-fill" style="width: 25%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plans Grid -->
+            <div class="plans-grid">
+                <!-- Plan: Trial (current would be disabled) -->
+                <div class="plan-card">
+                    <div class="plan-icon trial">🆓</div>
+                    <div class="plan-name">Trial</div>
+                    <div class="plan-price free">
+                        Miễn phí
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="check">✓</span> Tokens <span class="value">5,000</span></li>
+                        <li><span class="check">✓</span> Tài liệu <span class="value">3 files</span></li>
+                        <li><span class="check">✓</span> AI Chatbot</li>
+                        <li><span class="cross">✗</span> Live Chat Hand-off</li>
+                        <li><span class="cross">✗</span> Ưu tiên hỗ trợ</li>
+                    </ul>
+                    <button class="plan-btn disabled">Gói miễn phí</button>
+                </div>
+
+                <!-- Plan: Basic (Current) -->
+                <div class="plan-card current">
+                    <span class="plan-badge current">✓ Plan hiện tại</span>
+                    <div class="plan-icon basic">🚀</div>
+                    <div class="plan-name">Basic</div>
+                    <div class="plan-price">
+                        200,000<span class="currency">₫</span><span class="period">/tháng</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="check">✓</span> Tokens <span class="value">50,000</span></li>
+                        <li><span class="check">✓</span> Tài liệu <span class="value">10 files</span></li>
+                        <li><span class="check">✓</span> AI Chatbot</li>
+                        <li><span class="check">✓</span> Live Chat Hand-off</li>
+                        <li><span class="cross">✗</span> Ưu tiên hỗ trợ</li>
+                    </ul>
+                    <button class="plan-btn current-btn">✓ Đang sử dụng</button>
+                </div>
+
+                <!-- Plan: Pro (Recommended) -->
+                <div class="plan-card recommended">
+                    <span class="plan-badge recommended">🔥 Phổ biến nhất</span>
+                    <div class="plan-icon pro">👑</div>
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">
+                        500,000<span class="currency">₫</span><span class="period">/tháng</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="check">✓</span> Tokens <span class="value">200,000</span></li>
+                        <li><span class="check">✓</span> Tài liệu <span class="value">Unlimited</span></li>
+                        <li><span class="check">✓</span> AI Chatbot</li>
+                        <li><span class="check">✓</span> Live Chat Hand-off</li>
+                        <li><span class="check">✓</span> Ưu tiên hỗ trợ 24/7</li>
+                    </ul>
+                    <button class="plan-btn upgrade"
+                        onclick="document.getElementById('paymentModal').style.display='flex'">⬆ Nâng cấp Pro</button>
+                </div>
+            </div>
+
+            <!-- Order History -->
+            <div class="settings-section" style="margin-top: 32px;">
+                <h3>📋 Lịch sử thanh toán</h3>
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Gói</th>
+                            <th>Số tiền</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-family: monospace; color: var(--color-info);">ORD-a1b2c3</td>
+                            <td>Basic</td>
+                            <td style="font-weight: 600;">200,000₫</td>
+                            <td>26/02/2026 14:30</td>
+                            <td><span class="order-status paid">Đã thanh toán</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-family: monospace; color: var(--color-info);">ORD-d4e5f6</td>
+                            <td>Pro</td>
+                            <td style="font-weight: 600;">500,000₫</td>
+                            <td>25/01/2026 09:15</td>
+                            <td><span class="order-status expired">Hết hạn</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- ═══════ QR Payment Modal ═══════ -->
+    <div class="modal-overlay" id="paymentModal" style="display: flex;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>💳 Thanh toán chuyển khoản</h2>
+                <button class="modal-close"
+                    onclick="document.getElementById('paymentModal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-amount">500,000₫</div>
+                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+                    Nâng cấp lên <strong style="color: var(--color-primary);">Pro Plan</strong> · 200,000 tokens/tháng
+                </p>
+
+                <!-- VietQR Code -->
+                <div class="qr-wrapper">
+                    <img src="https://img.vietqr.io/image/MB-0123456789-compact2.png?amount=500000&addInfo=AI4ALL%20ORD%20x7y8z9&accountName=NGUYEN%20VAN%20A"
+                        alt="QR Thanh toán" />
+                </div>
+
+                <!-- Payment Details -->
+                <div class="payment-info">
+                    <div class="payment-row">
+                        <span class="label">Ngân hàng</span>
+                        <span class="value">MB Bank (MBBank)</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="label">Số tài khoản</span>
+                        <span class="value">0123456789 <button class="copy-btn" title="Copy">📋</button></span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="label">Chủ tài khoản</span>
+                        <span class="value">NGUYEN VAN A</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="label">Nội dung CK</span>
+                        <span class="value" style="color: var(--color-primary); font-family: monospace;">AI4ALL ORD
+                            x7y8z9 <button class="copy-btn" title="Copy">📋</button></span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="label">Số tiền</span>
+                        <span class="value" style="color: var(--color-primary); font-size: 16px;">500,000₫</span>
+                    </div>
+                </div>
+
+                <!-- Countdown -->
+                <div class="countdown">
+                    ⏰ Đơn hàng hết hạn sau: <span class="timer">28:45</span>
+                </div>
+
+                <!-- Auto-check status -->
+                <div class="status-checking">
+                    <div class="spinner"></div>
+                    Đang chờ xác nhận thanh toán... (tự động kiểm tra mỗi 5s)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fake FB Chat Plugin Mockup -->
+    <div style="position:fixed;bottom:24px;right:24px;z-index:9999;cursor:pointer;animation: bounce 2s infinite"
+        onclick="alert('Mô phỏng: Mở cửa sổ chat Messenger với AI Solution Bot để tư vấn gói cước')">
+        <div
+            style="width:60px;height:60px;background:#0A7CFF;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(10,124,255,0.4)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path
+                    d="M12 2C6.477 2 2 6.145 2 11.259c0 2.924 1.5 5.516 3.818 7.151v3.313c0 .351.353.585.674.457l3.352-1.34c.691.192 1.41.294 2.156.294 5.523 0 10-4.144 10-9.258C22 6.145 17.523 2 12 2zm1.066 12.333l-2.618-2.795-5.115 2.795 5.619-5.964 2.658 2.793 5.074-2.793-5.618 5.964z" />
+            </svg>
+        </div>
+    </div>
+    <style>
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</body>
+
+</html>

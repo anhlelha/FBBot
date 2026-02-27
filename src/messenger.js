@@ -2,27 +2,48 @@ const config = require('./config');
 
 async function sendMessage(recipientId, text, pageAccessToken) {
     const url = 'https://graph.facebook.com/v21.0/me/messages';
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${pageAccessToken}`,
-            },
-            body: JSON.stringify({
-                recipient: { id: recipientId },
-                message: { text },
-                messaging_type: 'RESPONSE',
-            }),
-        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            console.error('❌ Messenger API error:', error);
-            throw new Error(error.error?.message || 'Failed to send message');
+    // Facebook Messenger has a strict 2000 character limit per message
+    const MAX_LENGTH = 2000;
+
+    // Simple chunking by character length (could be improved to split by words/sentences)
+    const chunks = [];
+    for (let i = 0; i < text.length; i += MAX_LENGTH) {
+        chunks.push(text.substring(i, i + MAX_LENGTH));
+    }
+
+    let lastResponse = null;
+
+    try {
+        for (const chunk of chunks) {
+            // Add a small delay between chunks to ensure they arrive in order
+            if (chunks.length > 1 && chunk !== chunks[0]) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${pageAccessToken}`,
+                },
+                body: JSON.stringify({
+                    recipient: { id: recipientId },
+                    message: { text: chunk },
+                    messaging_type: 'RESPONSE',
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('❌ Messenger API error:', error);
+                throw new Error(error.error?.message || 'Failed to send message');
+            }
+
+            lastResponse = await response.json();
         }
 
-        return await response.json();
+        return lastResponse;
     } catch (error) {
         console.error('❌ Failed to send message:', error.message);
         throw error;

@@ -56,7 +56,7 @@ C4Container
 
     System_Ext(google, "Google OAuth")
     System_Ext(gemini, "Gemini API")
-    System_Ext(fb, "FB Messenger")
+    System_Ext(fb, "FB Messenger (Chat & Web Plugin)")
 
     Rel(tenant, landing, "Đăng ký/đăng nhập")
     Rel(tenant, dashboard, "Quản lý chatbot")
@@ -70,7 +70,7 @@ C4Container
     Rel(api, gemini, "AI generation")
     Rel(fb, api, "Webhook POST")
     Rel(api, fb, "Send API")
-    Rel(guest, fb, "Chat")
+    Rel(guest, fb, "Chat qua App hoặc Web Plugin")
 ```
 
 | Container | Technology | Role |
@@ -96,6 +96,7 @@ C4Component
         Component(vs, "Vector Store", "vectorStore.js", "Per-tenant cosine similarity search")
         Component(webhook, "Webhook Handler", "webhook.js", "Single /webhook endpoint, routes by page_id")
         Component(messenger, "Messenger Client", "messenger.js", "FB Send API with tenant token")
+        Component(guardrails, "Guardrails Engine", "guardrails.js", "Enforce Hard/Soft rules before AI gen")
         Component(database, "Database", "database.js", "SQLite schema + queries")
         Component(config, "Config", "config.js", "Environment variables")
     }
@@ -108,8 +109,11 @@ C4Component
     Rel(kb, aiFactory, "Generate embeddings")
     Rel(webhook, tenantMgr, "Lookup tenant")
     Rel(webhook, messenger, "Send replies")
-    Rel(webhook, aiFactory, "Generate responses")
+    Rel(webhook, guardrails, "Validate input/output")
+    Rel(guardrails, aiFactory, "Generate responses")
 ```
+
+> **Chi tiết thiết kế:** Mời xem tài liệu chi tiết cách hoạt động của Knowledge Base, RAG, Webhook Routing, và giới hạn Tenant tại [Component Design](./component-design.md).
 
 ## Facebook Integration Architecture
 
@@ -134,6 +138,7 @@ flowchart LR
     APP -->|All events| WH["/webhook"]
     WH -->|page_id=PA| AI_A[AI Instance A]
     WH -->|page_id=PB| AI_B[AI Instance B]
+    WH -->|page_id=Platform| AI_PLAT[AI Solution Bot (Web Chat)]
 ```
 
 ### Webhook Routing Logic
@@ -239,6 +244,7 @@ erDiagram
         string ai_model "gemini-2.5-flash"
         string bot_name "Bot display name"
         text tools_config "JSON array"
+        text guardrails "JSON (Soft guardrails)"
     }
 
     DOCUMENTS {

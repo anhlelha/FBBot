@@ -49,7 +49,25 @@
                     </svg>
                     Test Chat
                 </a>
+                <a href="#" class="nav-item" data-page="livechat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Live Chat
+                    <span class="nav-badge" id="livechatBadge" hidden></span>
+                </a>
                 <div class="nav-group-label">Cấu hình</div>
+                <a href="#" class="nav-item" data-page="upgrade">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                    </svg>
+                    Nâng cấp
+                </a>
                 <a href="#" class="nav-item" data-page="settings">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="3" />
@@ -82,8 +100,27 @@
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page active">
                 <header class="page-header">
-                    <h1>Dashboard</h1>
-                    <p class="page-subtitle" id="dashSubtitle">Tổng quan khách sạn của bạn</p>
+                    <div class="page-header-row">
+                        <div>
+                            <h1>Dashboard</h1>
+                            <p class="page-subtitle" id="dashSubtitle">Tổng quan khách sạn của bạn</p>
+                        </div>
+                        <div class="notif-wrapper">
+                            <button class="notif-bell" id="notifBell" title="Thông báo">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                </svg>
+                                <span class="notif-badge" id="notifBadge" hidden></span>
+                            </button>
+                            <div class="notif-dropdown" id="notifDropdown" hidden>
+                                <div class="notif-dropdown-header">Thông báo</div>
+                                <div class="notif-list" id="notifList">
+                                    <p class="notif-empty">Không có thông báo mới</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </header>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -146,6 +183,94 @@
                 </div>
             </div>
 
+            <!-- Live Chat Page (F01) -->
+            <div id="page-livechat" class="page">
+                <header class="page-header">
+                    <h1>Live Chat</h1>
+                    <p class="page-subtitle">Quản lý cuộc hội thoại với khách hàng</p>
+                </header>
+                <div class="livechat-container">
+                    <div class="livechat-sidebar">
+                        <div class="livechat-search">
+                            <input type="text" id="convSearch" placeholder="Tìm cuộc hội thoại..." autocomplete="off">
+                        </div>
+                        <div class="conv-list" id="convList">
+                            <p class="conv-empty">Chưa có cuộc hội thoại nào</p>
+                        </div>
+                    </div>
+                    <div class="livechat-main">
+                        <div class="livechat-header" id="livechatHeader">
+                            <div class="livechat-header-info">
+                                <span class="livechat-guest-name" id="lcGuestName">Chọn cuộc hội thoại</span>
+                                <span class="livechat-mode-badge" id="lcModeBadge"></span>
+                            </div>
+                            <div class="livechat-header-actions" id="lcActions" hidden>
+                                <button class="btn btn-sm btn-mode" id="lcToggleMode" title="Chuyển mode">🔄 Chuyển về
+                                    AI</button>
+                            </div>
+                        </div>
+                        <div class="livechat-messages" id="lcMessages">
+                            <div class="livechat-placeholder">👈 Chọn một cuộc hội thoại từ danh sách bên trái</div>
+                        </div>
+                        <form class="livechat-input-form" id="lcReplyForm" hidden>
+                            <input type="text" id="lcReplyInput" placeholder="Nhập tin nhắn trả lời..."
+                                autocomplete="off">
+                            <button type="submit" class="btn btn-primary">Gửi</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Page (F02) -->
+            <div id="page-upgrade" class="page">
+                <header class="page-header">
+                    <h1>Nâng cấp Plan</h1>
+                    <p class="page-subtitle">Chọn gói phù hợp để mở rộng khả năng chatbot</p>
+                </header>
+                <div class="plans-grid" id="plansGrid"></div>
+                <div class="order-history-section">
+                    <h3>Lịch sử đơn hàng</h3>
+                    <div id="orderHistory">
+                        <p style="color:var(--text-muted);padding:16px">Chưa có đơn hàng nào</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Modal -->
+            <div class="modal-overlay" id="paymentModal" hidden>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>💳 Thanh toán chuyển khoản</h3>
+                        <button class="modal-close" id="closePaymentModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="payment-qr">
+                            <img id="paymentQR" src="" alt="QR Code thanh toán">
+                        </div>
+                        <div class="payment-info">
+                            <div class="payment-row"><span>Ngân hàng:</span><strong id="payBankName"></strong></div>
+                            <div class="payment-row"><span>Số tài khoản:</span><strong id="payBankAccount"></strong>
+                            </div>
+                            <div class="payment-row"><span>Chủ tài khoản:</span><strong id="payAccountName"></strong>
+                            </div>
+                            <div class="payment-row"><span>Số tiền:</span><strong id="payAmount"
+                                    class="text-primary"></strong></div>
+                            <div class="payment-row">
+                                <span>Nội dung CK:</span>
+                                <strong id="payContent" class="text-primary"></strong>
+                                <button class="btn-copy" id="copyContent" title="Copy">📋</button>
+                            </div>
+                        </div>
+                        <div class="payment-timer">
+                            ⏱️ Hết hạn sau: <span id="payCountdown">30:00</span>
+                        </div>
+                        <div class="payment-status" id="payStatus">
+                            <div class="payment-polling">⏳ Đang chờ thanh toán...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Page -->
             <div id="page-settings" class="page">
                 <header class="page-header">
@@ -160,10 +285,36 @@
                         <input type="text" id="setBotName" class="form-input" placeholder="AI Assistant">
                     </div>
                     <div class="form-group">
-                        <label>System Prompt</label>
+                        <label>System Prompt (Identity & Hướng dẫn)</label>
                         <textarea id="setSystemPrompt" class="form-input" rows="4"
-                            placeholder="Hướng dẫn cho AI..."></textarea>
+                            placeholder="Hướng dẫn chung cho AI..."></textarea>
                     </div>
+
+                    <h4 style="margin: 20px 0 10px 0; font-size: 14px; color: var(--text-secondary);">Kiểm soát An toàn
+                        (Soft Guardrails)</h4>
+                    <div class="form-group">
+                        <label>Chủ đề cho phép (Topic Whitelist)</label>
+                        <input type="text" id="setTopicWhitelist" class="form-input"
+                            placeholder="VD: Khách sạn, Du lịch, Giá cả...">
+                        <small style="color: var(--text-muted); font-size: 12px; display: block; margin-top: 4px;">AI sẽ
+                            từ chối trả lời các chủ đề ngoài danh sách này.</small>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+                        <input type="checkbox" id="setBlockCompetitors"
+                            style="width: 18px; height: 18px; accent-color: var(--color-primary);">
+                        <label for="setBlockCompetitors" style="margin: 0; cursor: pointer;">Chặn nhắc đến đối thủ cạnh
+                            tranh (Block Competitors)</label>
+                    </div>
+
+                    <div class="form-group"
+                        style="display: flex; align-items: center; gap: 12px; margin-top: 12px; margin-bottom: 24px;">
+                        <input type="checkbox" id="setRestrictPayment"
+                            style="width: 18px; height: 18px; accent-color: var(--color-primary);">
+                        <label for="setRestrictPayment" style="margin: 0; cursor: pointer;">Chỉ cho phép dùng luồng
+                            thanh toán chính thức (Restrict Payment Info)</label>
+                    </div>
+
                     <button class="btn btn-primary" id="saveSettingsBtn">Lưu cài đặt</button>
                 </div>
 

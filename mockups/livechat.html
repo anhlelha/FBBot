@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4All — Live Chat (Mockup)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../public/dashboard.css">
+    <style>
+        /* ─── Live Chat Layout ─── */
+        .livechat-container {
+            display: flex;
+            height: calc(100vh - 140px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+        }
+
+        /* ─── Conversation List (Left Panel) ─── */
+        .conv-list {
+            width: 340px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conv-list-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .conv-list-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .conv-filter {
+            display: flex;
+            gap: 6px;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .conv-filter-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.15s;
+        }
+
+        .conv-filter-btn.active {
+            background: rgba(255, 153, 0, 0.15);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .conv-filter-btn .count {
+            margin-left: 4px;
+            font-weight: 700;
+        }
+
+        .conv-items {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conv-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.1s;
+            position: relative;
+        }
+
+        .conv-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .conv-item.active {
+            background: rgba(255, 153, 0, 0.08);
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .conv-item.urgent::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--color-danger);
+        }
+
+        .conv-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .conv-avatar .status-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        .status-dot.human {
+            background: var(--color-danger);
+        }
+
+        .status-dot.ai {
+            background: var(--color-success);
+        }
+
+        .conv-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conv-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conv-preview {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .conv-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .conv-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .conv-badge {
+            width: 18px;
+            height: 18px;
+            background: var(--color-danger);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .conv-mode-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 8px;
+            text-transform: uppercase;
+        }
+
+        .conv-mode-tag.human {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--color-danger);
+        }
+
+        .conv-mode-tag.ai {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        /* ─── Chat Area (Right Panel) ─── */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-area-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-tertiary);
+        }
+
+        .chat-area-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-area-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .chat-area-detail {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .chat-area-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.15s;
+        }
+
+        .mode-toggle.to-ai {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+        }
+
+        .mode-toggle.to-human {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--color-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        /* ─── Handoff Banner ─── */
+        .handoff-banner {
+            padding: 10px 20px;
+            background: rgba(255, 153, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 153, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--color-primary);
+        }
+
+        .handoff-banner strong {
+            font-weight: 600;
+        }
+
+        /* ─── Messages ─── */
+        .chat-messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 10px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .msg.guest {
+            align-self: flex-start;
+            background: var(--bg-tertiary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.ai {
+            align-self: flex-start;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.human {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-sender {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .msg.ai .msg-sender {
+            color: var(--color-info);
+        }
+
+        .msg.guest .msg-sender {
+            color: var(--text-muted);
+        }
+
+        .msg.human .msg-sender {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .msg.human .msg-time {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .system-msg {
+            align-self: center;
+            padding: 4px 14px;
+            background: rgba(255, 153, 0, 0.08);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+
+        /* ─── Reply Input ─── */
+        .reply-area {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .reply-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: var(--font-family);
+            outline: none;
+            resize: none;
+            max-height: 100px;
+        }
+
+        .reply-input:focus {
+            border-color: var(--color-primary);
+        }
+
+        .reply-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .reply-send {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.1s;
+        }
+
+        .reply-send:hover {
+            transform: scale(1.05);
+        }
+
+        .reply-send svg {
+            width: 18px;
+            height: 18px;
+            stroke: #000;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ─── Notification Bell ─── */
+        .notif-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .notif-bell svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--color-danger);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        /* ─── Nav badge ─── */
+        .nav-live-badge {
+            margin-left: auto;
+            background: var(--color-danger);
+            color: #fff;
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="#" class="sidebar-logo">
+                <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg></div>
+                <div>
+                    <div class="logo-text">AI4All</div>
+                    <div class="logo-sub">Dashboard</div>
+                </div>
+            </a>
+            <nav class="sidebar-nav">
+                <div class="nav-group-label">Chính</div>
+                <a href="dashboard.html" class="nav-item" data-page="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-page="knowledge">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    Knowledge Base
+                </a>
+                <a href="#" class="nav-item active" data-page="livechat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Live Chat
+                    <span class="nav-live-badge">2</span>
+                </a>
+                <a href="#" class="nav-item" data-page="chat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                        <line x1="9" y1="9" x2="9.01" y2="9" />
+                        <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>
+                    Test Chat
+                </a>
+                <div class="nav-group-label">Cài đặt</div>
+                <a href="upgrade.html" class="nav-item" data-page="upgrade">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    Nâng cấp Plan
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Cài đặt
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AV</div>
+                    <div class="user-details">
+                        <div class="user-name">anhle.finos@gmail.com</div>
+                        <div class="user-plan">BASIC</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <header class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>💬 Live Chat</h1>
+                    <p class="page-subtitle">Quản lý cuộc hội thoại với khách hàng trên Facebook Messenger</p>
+                </div>
+                <div class="notif-bell">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span class="notif-badge">3</span>
+                </div>
+            </header>
+
+            <!-- Live Chat Container -->
+            <div class="livechat-container">
+                <!-- Left: Conversation List -->
+                <div class="conv-list">
+                    <div class="conv-list-header">
+                        <h3>Cuộc hội thoại</h3>
+                        <span style="font-size:12px; color:var(--text-muted);">5 tổng</span>
+                    </div>
+                    <div class="conv-filter">
+                        <button class="conv-filter-btn active">Tất cả<span class="count">5</span></button>
+                        <button class="conv-filter-btn">🔴 Cần hỗ trợ<span class="count">2</span></button>
+                        <button class="conv-filter-btn">🤖 AI<span class="count">3</span></button>
+                    </div>
+                    <div class="conv-items">
+                        <!-- Conversation 1 - Active, Human mode, urgent -->
+                        <div class="conv-item active urgent">
+                            <div class="conv-avatar">👤<span class="status-dot human"></span></div>
+                            <div class="conv-info">
+                                <div class="conv-name">Nguyễn Văn Minh</div>
+                                <div class="conv-preview">Cho tôi gặp quản lý!</div>
+                                <span class="conv-mode-tag human">🧑 HUMAN</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">2 phút</span>
+                                <span class="conv-badge">3</span>
+                            </div>
+                        </div>
+                        <!-- Conversation 2 - Human mode -->
+                        <div class="conv-item">
+                            <div class="conv-avatar">👩<span class="status-dot human"></span></div>
+                            <div class="conv-info">
+                                <div class="conv-name">Trần Thị Lan</div>
+                                <div class="conv-preview">Tôi muốn đổi phòng sang view biển</div>
+                                <span class="conv-mode-tag human">🧑 HUMAN</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">15 phút</span>
+                            </div>
+                        </div>
+                        <!-- Conversation 3 - AI mode, active -->
+                        <div class="conv-item">
+                            <div class="conv-avatar">👨<span class="status-dot ai"></span></div>
+                            <div class="conv-info">
+                                <div class="conv-name">David Johnson</div>
+                                <div class="conv-preview">What time is check-in?</div>
+                                <span class="conv-mode-tag ai">🤖 AI</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">1 giờ</span>
+                            </div>
+                        </div>
+                        <!-- Conversation 4 - AI mode -->
+                        <div class="conv-item">
+                            <div class="conv-avatar">👩<span class="status-dot ai"></span></div>
+                            <div class="conv-info">
+                                <div class="conv-name">Lê Thu Hà</div>
+                                <div class="conv-preview">Phòng Deluxe giá bao nhiêu vậy?</div>
+                                <span class="conv-mode-tag ai">🤖 AI</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">3 giờ</span>
+                            </div>
+                        </div>
+                        <!-- Conversation 5 - AI mode -->
+                        <div class="conv-item">
+                            <div class="conv-avatar">🧑<span class="status-dot ai"></span></div>
+                            <div class="conv-info">
+                                <div class="conv-name">Phạm Quốc Bảo</div>
+                                <div class="conv-preview">Có dịch vụ đưa đón sân bay không?</div>
+                                <span class="conv-mode-tag ai">🤖 AI</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">5 giờ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-area-header">
+                        <div class="chat-area-user">
+                            <div class="conv-avatar" style="width:36px;height:36px;">👤</div>
+                            <div>
+                                <div class="chat-area-name">Nguyễn Văn Minh</div>
+                                <div class="chat-area-detail">PSID: 27516369037951650 · Bắt đầu: 15:30 hôm nay</div>
+                            </div>
+                        </div>
+                        <div class="chat-area-actions">
+                            <button class="mode-toggle to-ai">🤖 Chuyển về AI</button>
+                        </div>
+                    </div>
+
+                    <!-- Handoff Banner -->
+                    <div class="handoff-banner">
+                        ⚠️ <strong>Hand-off:</strong> Khách yêu cầu gặp nhân viên — "Cho tôi gặp quản lý!" · 15:42
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="chat-messages-area">
+                        <div class="msg guest">
+                            <div class="msg-sender">👤 Nguyễn Văn Minh</div>
+                            Cho tôi hỏi phòng Suite có bồn tắm nóng không?
+                            <div class="msg-time">15:30</div>
+                        </div>
+                        <div class="msg ai">
+                            <div class="msg-sender">🤖 AI Bot</div>
+                            Dạ chào anh Minh! Phòng Suite của khách sạn được trang bị bồn tắm nóng (jacuzzi) với view
+                            hướng biển rất đẹp ạ. Anh có muốn đặt phòng không ạ?
+                            <div class="msg-time">15:30</div>
+                        </div>
+                        <div class="msg guest">
+                            <div class="msg-sender">👤 Nguyễn Văn Minh</div>
+                            Giá phòng Suite cuối tuần bao nhiêu? Có giảm giá cho khách VIP không?
+                            <div class="msg-time">15:35</div>
+                        </div>
+                        <div class="msg ai">
+                            <div class="msg-sender">🤖 AI Bot</div>
+                            Phòng Suite cuối tuần có giá 3,500,000₫/đêm ạ. Về chương trình VIP, em chưa có thông tin cập
+                            nhật nhất. Anh có muốn em chuyển cho nhân viên tư vấn trực tiếp không ạ?
+                            <div class="msg-time">15:35</div>
+                        </div>
+                        <div class="msg guest">
+                            <div class="msg-sender">👤 Nguyễn Văn Minh</div>
+                            Cho tôi gặp quản lý!
+                            <div class="msg-time">15:42</div>
+                        </div>
+                        <div class="system-msg">🔄 Đã chuyển sang chế độ HUMAN — 15:42</div>
+                        <div class="msg ai">
+                            <div class="msg-sender">🤖 AI Bot</div>
+                            Dạ vâng, em đã chuyển cuộc hội thoại cho nhân viên tư vấn. Anh vui lòng chờ trong giây lát,
+                            sẽ có người hỗ trợ ngay ạ! 🙏
+                            <div class="msg-time">15:42</div>
+                        </div>
+                        <div class="msg human">
+                            <div class="msg-sender">🧑 Nhân viên (Bạn)</div>
+                            Chào anh Minh! Em là Hạnh, nhân viên tư vấn. Về chương trình VIP, hiện KS đang có ưu đãi
+                            giảm 20% cho khách đặt từ 2 đêm trở lên ạ.
+                            <div class="msg-time">15:45</div>
+                        </div>
+                    </div>
+
+                    <!-- Reply Input -->
+                    <div class="reply-area">
+                        <input class="reply-input" placeholder="Nhập tin nhắn trả lời khách..." />
+                        <button class="reply-send">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

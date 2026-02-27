@@ -5,11 +5,13 @@ const cookieSession = require('cookie-session');
 const config = require('./src/config');
 const ai = require('./src/ai');
 const webhookRouter = require('./src/webhook');
-const { requireAuth, requireOwner, handleGoogleLogin, isOwner } = require('./src/auth');
-const { tenants, fbConfig, settings, documents, whitelist } = require('./src/database');
+const { requireAuth, requireOwner, requireOwnerRedirect, handleGoogleLogin, isOwner } = require('./src/auth');
+const { tenants, fbConfig, settings, documents, whitelist, conversations, messages, notifications, orders, platformSettings, plansMgr } = require('./src/database');
 const knowledgeBase = require('./src/knowledgeBase');
 const tenantManager = require('./src/tenantManager');
 const messenger = require('./src/messenger');
+const conversationModule = require('./src/conversation');
+const payment = require('./src/payment');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.MAX_FILE_SIZE } });
@@ -174,11 +176,14 @@ app.get('/api/settings', requireAuth, (req, res) => {
 app.put('/api/settings', requireAuth, (req, res) => {
     try {
         const current = settings.get(req.tenant.id);
-        const { system_prompt, ai_model, bot_name } = req.body;
+        const { system_prompt, ai_model, bot_name, topic_whitelist, block_competitors, restrict_payment } = req.body;
         settings.update(req.tenant.id, {
             system_prompt: system_prompt || current.system_prompt,
             ai_model: ai_model || current.ai_model || config.DEFAULT_AI_MODEL,
             bot_name: bot_name || current.bot_name || config.DEFAULT_BOT_NAME,
+            topic_whitelist: topic_whitelist !== undefined ? topic_whitelist : current.topic_whitelist,
+            block_competitors: block_competitors !== undefined ? (block_competitors ? 1 : 0) : current.block_competitors,
+            restrict_payment: restrict_payment !== undefined ? (restrict_payment ? 1 : 0) : current.restrict_payment,
         });
         tenantManager.clearTenantInstance(req.tenant.id);
         res.json({ ok: true });
@@ -232,6 +237,129 @@ app.delete('/api/fb-config', requireAuth, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════
+// F01: LIVE CHAT HAND-OFF API
+// ═══════════════════════════════════════════════════
+
+app.get('/api/conversations', requireAuth, (req, res) => {
+    const convs = conversations.getByTenant(req.tenant.id);
+    const enriched = convs.map(c => {
+        const lastMsg = messages.getByConversation(c.id, 1);
+        return { ...c, last_message: lastMsg[lastMsg.length - 1] || null };
+    });
+    res.json(enriched);
+});
+
+app.get('/api/conversations/:id/messages', requireAuth, (req, res) => {
+    const conv = conversations.getById(req.params.id);
+    if (!conv || conv.tenant_id !== req.tenant.id) {
+        return res.status(404).json({ error: 'Conversation not found' });
+    }
+    const msgs = messages.getByConversation(req.params.id, parseInt(req.query.limit) || 50);
+    res.json(msgs);
+});
+
+app.post('/api/conversations/:id/reply', requireAuth, async (req, res) => {
+    try {
+        const conv = conversations.getById(req.params.id);
+        if (!conv || conv.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const { message } = req.body;
+        if (!message) return res.status(400).json({ error: 'Missing message' });
+
+        const fb = fbConfig.get(req.tenant.id);
+        if (!fb?.page_access_token) {
+            return res.status(400).json({ error: 'Facebook page not connected' });
+        }
+
+        await conversationModule.sendHumanReply(conv.id, message, fb.page_access_token);
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('❌ Reply error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/conversations/:id/mode', requireAuth, (req, res) => {
+    const conv = conversations.getById(req.params.id);
+    if (!conv || conv.tenant_id !== req.tenant.id) {
+        return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const { mode } = req.body;
+    if (!['ai', 'human', 'paused'].includes(mode)) {
+        return res.status(400).json({ error: 'Invalid mode. Must be: ai, human, paused' });
+    }
+
+    conversations.updateMode(req.params.id, mode);
+    console.log(`🔄 [${req.tenant.email}] Conversation ${req.params.id} → ${mode} mode`);
+    res.json({ ok: true, mode });
+});
+
+app.get('/api/notifications', requireAuth, (req, res) => {
+    const notifs = notifications.getAll(req.tenant.id, parseInt(req.query.limit) || 20);
+    const unreadCount = notifications.countUnread(req.tenant.id);
+    res.json({ notifications: notifs, unreadCount });
+});
+
+app.put('/api/notifications/:id/read', requireAuth, (req, res) => {
+    notifications.markRead(parseInt(req.params.id));
+    res.json({ ok: true });
+});
+
+// ═══════════════════════════════════════════════════
+// F02: SEPAY PAYMENT API
+// ═══════════════════════════════════════════════════
+
+app.get('/api/plans', async (req, res) => {
+    try {
+        const activePlans = await payment.getPlans();
+        res.json(activePlans);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/orders', requireAuth, (req, res) => {
+    try {
+        const { plan } = req.body;
+        if (!plan) return res.status(400).json({ error: 'Missing plan' });
+
+        const order = payment.createOrder(req.tenant.id, plan);
+        res.json(order);
+    } catch (error) {
+        console.error('❌ Create order error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.get('/api/orders/:id', requireAuth, (req, res) => {
+    const order = orders.getById(req.params.id);
+    if (!order || order.tenant_id !== req.tenant.id) {
+        return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(order);
+});
+
+app.get('/api/orders', requireAuth, (req, res) => {
+    const tenantOrders = orders.getByTenant(req.tenant.id);
+    res.json(tenantOrders);
+});
+
+// SePay Webhook (no auth middleware, uses API key)
+app.post('/api/sepay/webhook', (req, res) => {
+    try {
+        const apiKey = req.headers.authorization;
+        const result = payment.handleSepayWebhook(req.body, apiKey);
+        res.json(result);
+    } catch (error) {
+        console.error('❌ SePay webhook error:', error.message);
+        res.status(401).json({ error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════
 // OWNER ADMIN API
 // ═══════════════════════════════════════════════════
 
@@ -251,6 +379,7 @@ app.get('/api/owner/tenants', requireOwner, (req, res) => {
             ...t,
             fbConnected: !!fb?.page_id,
             fbPageName: fb?.page_name,
+            fbPageId: fb?.page_id,
             documentsCount: docStats.totalDocuments,
         };
     });
@@ -286,6 +415,74 @@ app.delete('/api/owner/whitelist/:email', requireOwner, (req, res) => {
     res.json({ ok: true });
 });
 
+// Owner — Orders & Revenue (F02)
+app.get('/api/owner/orders', requireOwner, (req, res) => {
+    res.json(orders.getAll());
+});
+
+app.get('/api/owner/revenue', requireOwner, (req, res) => {
+    const monthly = orders.getRevenueByMonth();
+    const total = orders.getTotalRevenue();
+    res.json({ monthly, total });
+});
+
+// ─── Platform Settings API ───
+app.get('/api/owner/platform-settings', requireOwner, (req, res) => {
+    res.json(platformSettings.getAll());
+});
+
+app.put('/api/owner/platform-settings', requireOwner, (req, res) => {
+    try {
+        const { hard_guardrails } = req.body;
+        if (hard_guardrails !== undefined) {
+            platformSettings.set('hard_guardrails', hard_guardrails);
+        }
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('❌ Update platform settings error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ─── Owner Plans API (F06) ───
+app.get('/api/owner/plans', requireOwner, (req, res) => {
+    res.json(plansMgr.getAll());
+});
+
+app.post('/api/owner/plans', requireOwner, (req, res) => {
+    try {
+        const { id, name, price, token_limit, features, is_active } = req.body;
+        if (!id || !name || price === undefined) return res.status(400).json({ error: 'Missing required fields' });
+
+        const plan = plansMgr.create(id, name, price, token_limit, JSON.stringify(features), is_active);
+        res.json(plan);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/owner/plans/:id', requireOwner, (req, res) => {
+    try {
+        const { name, price, token_limit, features, is_active } = req.body;
+        const updateData = { name, price, token_limit, is_active };
+        if (features) updateData.features = JSON.stringify(features);
+
+        const plan = plansMgr.update(req.params.id, updateData);
+        res.json(plan);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/owner/plans/:id', requireOwner, (req, res) => {
+    try {
+        plansMgr.delete(req.params.id);
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ─── Page Routes ───
 app.get('/', (req, res) => {
     const fs = require('fs');
@@ -294,10 +491,16 @@ app.get('/', (req, res) => {
     res.type('html').send(html);
 });
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
-app.get('/owner.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'owner.html')));
+app.get('/owner.html', requireOwnerRedirect, (req, res) => res.sendFile(path.join(__dirname, 'public', 'owner.html')));
 
 // ─── Start Server ───
 ai.initAI();
+
+// Periodic cleanup: expire old orders every 5 minutes
+setInterval(() => {
+    const expired = orders.expireOld();
+    if (expired > 0) console.log(`🧹 Expired ${expired} old order(s)`);
+}, 5 * 60 * 1000);
 
 app.listen(config.PORT, () => {
     console.log('');
@@ -307,6 +510,7 @@ app.listen(config.PORT, () => {
     console.log(`║  🌐 http://localhost:${config.PORT}               ║`);
     console.log(`║  👑 Owner: ${config.OWNER_EMAIL}     ║`);
     console.log(`║  📡 Webhook: /webhook                    ║`);
+    console.log(`║  💳 SePay: ${config.SEPAY_ENV} mode             ║`);
     console.log('╚══════════════════════════════════════════╝');
     console.log('');
 });

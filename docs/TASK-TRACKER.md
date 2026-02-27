@@ -130,6 +130,38 @@
 ### ⏳ Google OAuth Setup Guide
 - **Status:** Pending
 
+### ✅ Component Design Documentation
+- **Completed:** 2026-02-26 14:55
+- **Files:** `docs/component-design.md`
+- **Result:** Tài liệu chi tiết giải thích kiến trúc Knowledge Base, RAG (VectorStore & Chunking), Webhook multi-tenant routing, và Tenant Manager.
+
+### ✅ RAG Analysis & Upgrade Plan
+- **Completed:** 2026-02-26 16:15
+- **Files:** `docs/component-design.md` (Section 6-7), `docs/PLAN-saas-chatbot-platform.md`
+- **Result:** So sánh chuyên sâu Chunking (Fixed vs Recursive vs Semantic), Vector DB (In-Memory vs ChromaDB vs Pinecone vs sqlite-vss), Embedding Model. Lộ trình nâng cấp 3 bước cho Phase 2. Đã cập nhật Plan file.
+
+---
+
+## Phase 2: Advanced Features & Integrations
+
+### ✅ F04: Guardrails Implementation
+- **Status:** Done
+- **Completed:** 2026-02-27 11:45
+- **Files:** `src/database.js`, `src/ai.js`, `server.js`, `public/dashboard.html`, `public/dashboard.js`, `public/owner.html`
+- **Result:** Implemented 2-tier guardrails. Super Admin (Hard Guardrails) API enabled and configurable via Owner Dashboard and dynamically injected into all AI prompts. Tenant Admin (Soft Guardrails: topic whitelist, block competitors, restrict payment info) configurable via Tenant Dashboard.
+
+### ✅ F05: Platform Web Chat Integration
+- **Status:** Done
+- **Completed:** 2026-02-27 10:45
+- **Files:** `src/database.js`, `public/landing.html`, `public/upgrade.html`
+- **Result:** Auto-seeded Admin Tenant for Platform. Integrated FB Messenger Chat Plugin into Landing and Upgrade pages. Mapped to AI Solution Fanpage for seamless Knowledge Base and Handoff integration.
+
+### 🔄 F06: Package Management & Token Tracking
+- **Status:** In Progress
+- **Started:** 2026-02-27
+- **Files:** `f06-package-management.md`, `src/database.js`, `src/ai.js`, `server.js`
+- **Result:** Planning phase completed for dynamic package management and real token tracking.
+
 ---
 
 ## Task Tracking Workflow

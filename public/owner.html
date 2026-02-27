@@ -179,6 +179,21 @@
                     </svg>
                     Whitelist Emails
                 </a>
+                <a href="#" class="nav-item" data-page="platform-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Platform Settings
+                </a>
+                <a href="#" class="nav-item" data-page="plans">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                    </svg>
+                    Gói cước & Định giá
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -255,7 +270,7 @@
                                 <th>Plan</th>
                                 <th>Tokens</th>
                                 <th>Status</th>
-                                <th>FB</th>
+                                <th>FB Page</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -284,6 +299,92 @@
                     </div>
                 </div>
             </div>
+            <!-- Platform Settings -->
+            <div id="page-platform-settings" class="page">
+                <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>Platform Settings</h1>
+                        <p class="page-subtitle">Cấu hình chung cho nền tảng AI4All</p>
+                    </div>
+                    <button class="btn btn-primary" id="savePlatformSettingsBtn">💾 Lưu cài đặt</button>
+                </header>
+                <div class="settings-section">
+                    <h3>Hard Guardrails (Platform Level)</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+                        Các quy tắc này được mã hóa và áp dụng ngầm vào LUÔN LUÔN đứng đầu System Prompt của mọi AI Bot
+                        trên hệ thống.
+                        Nó nhằm mục đích bảo vệ an toàn cho nền tảng, chống LLM Jailbreak và rò rỉ dữ liệu.
+                    </p>
+                    <textarea id="setHardGuardrails" class="form-input" rows="8"
+                        placeholder="Nhập Hard Guardrails..."></textarea>
+                </div>
+            </div>
+
+            <!-- Plans -->
+            <div id="page-plans" class="page">
+                <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>Gói cước & Định giá</h1>
+                        <p class="page-subtitle">Quản lý các gói dịch vụ trên toàn hệ thống</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showPlanForm()">➕ Thêm gói mới</button>
+                </header>
+
+                <div class="settings-section">
+                    <table class="tenant-table">
+                        <thead>
+                            <tr>
+                                <th>ID Gói</th>
+                                <th>Tên Hiển Thị</th>
+                                <th>Giá (VND)</th>
+                                <th>Hạn mức Tokens</th>
+                                <th>Tính năng</th>
+                                <th>Trạng thái</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plansList"></tbody>
+                    </table>
+                </div>
+
+                <!-- Plan Form Overlay (simple inline form for MVP) -->
+                <div id="planForm" class="settings-section"
+                    style="display: none; border-top: 2px solid var(--color-primary); margin-top: 32px; background: var(--bg-tertiary);">
+                    <h3 id="planFormTitle">Thêm Gói Cước Mới</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                        <div>
+                            <label class="form-label">Plan ID (Ví dụ: vip_500)</label>
+                            <input type="text" id="pId" class="form-input" placeholder="id_duy_nhat">
+                        </div>
+                        <div>
+                            <label class="form-label">Tên hiển thị</label>
+                            <input type="text" id="pName" class="form-input" placeholder="Tên gói cước">
+                        </div>
+                        <div>
+                            <label class="form-label">Giá tiền (VND)</label>
+                            <input type="number" id="pPrice" class="form-input" placeholder="Ví dụ: 500000">
+                        </div>
+                        <div>
+                            <label class="form-label">Hạn mức Token</label>
+                            <input type="number" id="pTokens" class="form-input" placeholder="Ví dụ: 100000">
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <label class="form-label">Tính năng (Mỗi dòng một tính năng)</label>
+                        <textarea id="pFeatures" class="form-input" rows="4"
+                            placeholder="Ví dụ:&#10;Hỗ trợ 24/7&#10;Không giới hạn tài liệu"></textarea>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="pActive" checked>
+                        <label for="pActive" style="font-size: 14px;">Kích hoạt gói này (Cho phép tenant thấy &
+                            mua)</label>
+                    </div>
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button class="btn btn-primary" id="savePlanBtn">Lưu gói cước</button>
+                        <button class="btn btn-secondary" onclick="hidePlanForm()">Hủy bỏ</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -296,9 +397,10 @@
                     const data = await res.json();
                     if (!res.ok || !data.isOwner) { window.location.href = '/'; return; }
                     document.getElementById('ownerEmail').textContent = data.tenant.email;
-                    loadOverview();
                     loadTenants();
                     loadWhitelist();
+                    loadPlatformSettings();
+                    loadPlans();
                 } catch (e) { window.location.href = '/'; }
             }
 
@@ -341,7 +443,18 @@
           <td>${t.tokens_used.toLocaleString()} / ${t.token_limit.toLocaleString()}</td>
           <td><span class="badge badge-${t.status}">${t.status}</span></td>
           ${showActions ? `
-            <td>${t.fbConnected ? '✅' : '—'}</td>
+            <td>
+              ${t.fbConnected ? `
+                <div style="font-weight: 500; font-size: 13px; color: var(--text-primary); margin-bottom: 2px;">${t.fbPageName || 'Chưa rõ tên'}</div>
+                <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                  ${t.fbPageId}
+                  <a href="https://facebook.com/${t.fbPageId}" target="_blank" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 2px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Xem Page
+                  </a>
+                </div>
+              ` : '<span style="color: var(--text-muted)">—</span>'}
+            </td>
             <td>
               ${t.status === 'active'
                             ? `<button class="action-btn danger" onclick="toggleTenant('${t.id}','suspended')">Suspend</button>`
@@ -404,6 +517,161 @@
                 const data = await res.json();
                 if (res.ok) { loadWhitelist(); loadOverview(); }
                 else alert(data.error);
+            };
+
+            // Platform Settings
+            async function loadPlatformSettings() {
+                try {
+                    const res = await fetch('/api/owner/platform-settings');
+                    const settings = await res.json();
+                    document.getElementById('setHardGuardrails').value = settings.hard_guardrails || '';
+                } catch (e) {
+                    console.error('Error loading platform settings:', e);
+                }
+            }
+
+            document.getElementById('savePlatformSettingsBtn').addEventListener('click', async () => {
+                const hard_guardrails = document.getElementById('setHardGuardrails').value;
+                try {
+                    const res = await fetch('/api/owner/platform-settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hard_guardrails }),
+                    });
+                    if (res.ok) alert('✅ Đã lưu cấu hình nền tảng thành công!');
+                    else {
+                        const data = await res.json();
+                        alert('❌ ' + data.error);
+                    }
+                } catch (e) {
+                    alert('❌ Lỗi kết nối');
+                }
+            });
+
+            // Plans
+            async function loadPlans() {
+                try {
+                    const res = await fetch('/api/owner/plans');
+                    if (!res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        console.error('Failed to load plans:', data.error || res.statusText);
+                        return;
+                    }
+                    const plans = await res.json();
+                    document.getElementById('plansList').innerHTML = plans.map(p => {
+                        const features = p.features ? JSON.parse(p.features) : [];
+                        return `
+                        <tr>
+                            <td><strong>${p.id}</strong></td>
+                            <td>${p.name}</td>
+                            <td>${Number(p.price).toLocaleString()}đ</td>
+                            <td>${Number(p.token_limit).toLocaleString()}</td>
+                            <td><div style="font-size: 11px; color: var(--text-muted)">${features.join(', ')}</div></td>
+                            <td><span class="badge ${p.is_active ? 'badge-active' : 'badge-suspended'}">${p.is_active ? 'Active' : 'Hidden'}</span></td>
+                            <td>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="action-btn" onclick="editPlan('${p.id}')">Sửa</button>
+                                    <button class="action-btn danger" onclick="deletePlan('${p.id}')">Xoá</button>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    console.error('Error in loadPlans:', e);
+                }
+            }
+
+            let editingPlanId = null;
+
+            window.showPlanForm = function () {
+                editingPlanId = null;
+                document.getElementById('planFormTitle').textContent = 'Thêm Gói Cước Mới';
+                document.getElementById('pId').value = '';
+                document.getElementById('pId').disabled = false;
+                document.getElementById('pName').value = '';
+                document.getElementById('pPrice').value = '';
+                document.getElementById('pTokens').value = '';
+                document.getElementById('pFeatures').value = '';
+                document.getElementById('pActive').checked = true;
+                document.getElementById('planForm').style.display = 'block';
+                document.getElementById('planForm').scrollIntoView({ behavior: 'smooth' });
+            };
+
+            window.hidePlanForm = function () {
+                document.getElementById('planForm').style.display = 'none';
+            };
+
+            window.editPlan = async function (id) {
+                const res = await fetch('/api/owner/plans');
+                const plans = await res.json();
+                const p = plans.find(x => x.id === id);
+                if (!p) return;
+
+                editingPlanId = id;
+                document.getElementById('planFormTitle').textContent = 'Chỉnh sửa Gói: ' + p.name;
+                document.getElementById('pId').value = p.id;
+                document.getElementById('pId').disabled = true;
+                document.getElementById('pName').value = p.name;
+                document.getElementById('pPrice').value = p.price;
+                document.getElementById('pTokens').value = p.token_limit;
+
+                const features = p.features ? JSON.parse(p.features) : [];
+                document.getElementById('pFeatures').value = features.join('\n');
+                document.getElementById('pActive').checked = !!p.is_active;
+
+                document.getElementById('planForm').style.display = 'block';
+                document.getElementById('planForm').scrollIntoView({ behavior: 'smooth' });
+            };
+
+            document.getElementById('savePlanBtn').addEventListener('click', async () => {
+                const id = document.getElementById('pId').value.trim();
+                const name = document.getElementById('pName').value.trim();
+                const price = parseInt(document.getElementById('pPrice').value);
+                const token_limit = parseInt(document.getElementById('pTokens').value);
+                const features = document.getElementById('pFeatures').value.split('\n').map(s => s.trim()).filter(s => s);
+                const is_active = document.getElementById('pActive').checked ? 1 : 0;
+
+                if (!id || !name || isNaN(price) || isNaN(token_limit)) {
+                    return alert('Vui lòng nhập đầy đủ các trường bắt buộc');
+                }
+
+                const url = editingPlanId ? `/api/owner/plans/${editingPlanId}` : '/api/owner/plans';
+                const method = editingPlanId ? 'PUT' : 'POST';
+
+                try {
+                    const res = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id, name, price, token_limit, features, is_active })
+                    });
+
+                    const data = await res.json().catch(() => ({ error: 'Không thể giải mã phản hồi từ hệ thống' }));
+
+                    if (res.ok) {
+                        alert('✅ Đã lưu gói cước thành công!');
+                        hidePlanForm();
+                        loadPlans();
+                    } else {
+                        alert('❌ ' + (data.error || 'Lỗi không xác định'));
+                    }
+                } catch (e) {
+                    console.error('Save plan error:', e);
+                    alert('❌ Lỗi kết nối: ' + e.message);
+                }
+            });
+
+            window.deletePlan = async function (id) {
+                if (!confirm(`Bạn có chắc chắn muốn xoá gói cước "${id}"? \nLưu ý: Các tenant đang dùng gói này có thể gặp lỗi nếu gói bị xoá hẳn. Nên cân nhắc Deactivate thay vì Xoá.`)) return;
+                try {
+                    const res = await fetch(`/api/owner/plans/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        loadPlans();
+                    } else {
+                        const data = await res.json();
+                        alert('❌ ' + data.error);
+                    }
+                } catch (e) { alert('❌ Lỗi kết nối'); }
             };
 
             // Logout
