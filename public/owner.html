@@ -397,6 +397,7 @@
                     const data = await res.json();
                     if (!res.ok || !data.isOwner) { window.location.href = '/'; return; }
                     document.getElementById('ownerEmail').textContent = data.tenant.email;
+                    loadOverview(); // Load stats on init
                     loadTenants();
                     loadWhitelist();
                     loadPlatformSettings();
@@ -408,26 +409,32 @@
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
+                    const page = item.dataset.page;
                     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                     item.classList.add('active');
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                    document.getElementById('page-' + item.dataset.page).classList.add('active');
+                    document.getElementById('page-' + page).classList.add('active');
+                    if (page === 'overview') loadOverview();
                 });
             });
 
             // Overview
             async function loadOverview() {
-                const [statsRes, wlRes] = await Promise.all([
-                    fetch('/api/owner/stats'),
-                    fetch('/api/owner/whitelist'),
-                ]);
-                const stats = await statsRes.json();
-                const wl = await wlRes.json();
+                try {
+                    const [statsRes, wlRes] = await Promise.all([
+                        fetch('/api/owner/stats'),
+                        fetch('/api/owner/whitelist'),
+                    ]);
+                    const stats = await statsRes.json();
+                    const wl = await wlRes.json();
 
-                document.getElementById('oStatTotal').textContent = stats.total;
-                document.getElementById('oStatActive').textContent = stats.active;
-                document.getElementById('oStatTokens').textContent = stats.totalTokens.toLocaleString();
-                document.getElementById('oStatWhitelist').textContent = wl.length;
+                    document.getElementById('oStatTotal').textContent = stats.total || 0;
+                    document.getElementById('oStatActive').textContent = stats.active || 0;
+                    document.getElementById('oStatTokens').textContent = (stats.totalTokens || 0).toLocaleString();
+                    document.getElementById('oStatWhitelist').textContent = wl.length || 0;
+                } catch (e) {
+                    console.error('Error loading overview:', e);
+                }
             }
 
             // Tenants
