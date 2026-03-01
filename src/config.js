@@ -33,7 +33,7 @@ module.exports = {
   // Limits
   DEFAULT_TRIAL_TOKEN_LIMIT: parseInt(process.env.TRIAL_TOKEN_LIMIT) || 5000,
   DEFAULT_BASIC_TOKEN_LIMIT: parseInt(process.env.BASIC_TOKEN_LIMIT) || 50000,
-  MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB
+  MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE) || 50 * 1024 * 1024, // 50MB
 
   // SePay Payment
   SEPAY_ENV: process.env.SEPAY_ENV || 'sandbox',
