@@ -166,28 +166,6 @@ app.post('/api/chat', requireAuth, async (req, res) => {
     }
 });
 
-// ─── Platform Public Chat API (F05) ───
-app.post('/api/platform/chat', async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message) return res.status(400).json({ error: 'Missing message' });
-
-        // Get owner tenant email from platform settings or config
-        const ownerEmail = platformSettings.get('owner_email') || config.OWNER_EMAIL;
-        const ownerTenant = tenants.getByEmail(ownerEmail);
-
-        if (!ownerTenant) {
-            return res.status(500).json({ error: 'Platform admin bot not configured' });
-        }
-
-        const reply = await tenantManager.generateResponseForTenant(ownerTenant.id, message);
-        res.json({ reply });
-    } catch (error) {
-        console.error('❌ Platform chat error:', error.message);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // ─── Settings API (tenant-scoped) ───
 app.get('/api/settings', requireAuth, (req, res) => {
     const tenantSettings = settings.get(req.tenant.id);
