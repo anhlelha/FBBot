@@ -16,6 +16,10 @@ function getTenantInstance(tenantId) {
 
     const tenantSettings = settings.get(tenantId);
     const vectorStore = new VectorStore();
+
+    // Load knowledge back into vector store from DB
+    knowledgeBase.loadTenantKnowledge(tenantId, vectorStore);
+
     const instance = {
         tenant,
         settings: tenantSettings,

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>AI4All - Giải pháp AI Tăng Doanh Số</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --r-main-font: 'Inter', sans-serif;
+            --r-heading-font: 'Inter', sans-serif;
+            --primary-color: #003366;
+            /* Deep Corporate Blue */
+            --secondary-color: #00A3AD;
+            /* Teal Accent */
+            --text-dark: #333333;
+            --gray-bg: #F4F7F9;
+        }
+
+        .reveal h1 {
+            font-size: 2.0em;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: none;
+        }
+
+        .reveal h2 {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: none;
+            border-bottom: 3px solid var(--secondary-color);
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+        }
+
+        .reveal h3 {
+            font-size: 1.25em;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: none;
+        }
+
+        .reveal h4 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .reveal p {
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+
+        .slide-content {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            height: 100%;
+            padding-top: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .accent-card {
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .icon-box {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .icon-box i {
+            width: 24px !important;
+            height: 24px !important;
+        }
+
+        ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        li {
+            margin-bottom: 8px !important;
+            position: relative;
+            padding-left: 25px !important;
+            font-size: 0.75em;
+        }
+
+        li::before {
+            content: "•";
+            color: var(--secondary-color);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+            position: absolute;
+            left: 5px;
+        }
+
+        .roi-box {
+            display: flex;
+            justify-content: space-between;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .roi-item {
+            text-align: center;
+            width: 45%;
+        }
+
+        .roi-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            left: 40px;
+            font-size: 0.4em;
+            color: #999;
+        }
+
+        .big-number {
+            font-size: 3em;
+            font-weight: 800;
+            color: var(--primary-color);
+            opacity: 0.1;
+            position: absolute;
+            top: -10px;
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section data-background="linear-gradient(135deg, #003366 0%, #001f3f 100%)">
+                <div style="color: white;">
+                    <h1 style="color: white; font-size: 2.5em; margin-bottom: 0.2em;">AI4ALL</h1>
+                    <h3 style="color: var(--secondary-color); text-transform: uppercase; letter-spacing: 2px;">Nhân viên
+                        ảo 24/7 cho doanh nghiệp</h3>
+                    <p style="opacity: 0.8; margin-top: 50px;">"Không bao giờ bỏ lỡ một khách hàng nào"</p>
+                    <div style="margin-top: 100px; font-size: 0.8em; opacity: 0.6;">Dành riêng cho Chủ Khách Sạn & Chủ
+                        Shop</div>
+                </div>
+            </section>
+
+            <!-- Slide 2: Problem -->
+            <section>
+                <div class="slide-content">
+                    <h2>Nỗi đau của Chủ doanh nghiệp</h2>
+                    <div class="grid-2">
+                        <div class="card fragment fade-up">
+                            <div class="icon-box"><i data-lucide="clock-alert"></i></div>
+                            <h4>Bỏ lỡ khách hàng</h4>
+                            <p style="font-size: 0.7em;">Khách hỏi lúc 2AM nhưng không ai trực. 30% khách hàng rời đi
+                                nếu không được phản hồi trong 5 phút.</p>
+                        </div>
+                        <div class="card accent-card fragment fade-up">
+                            <div class="icon-box"><i data-lucide="users"></i></div>
+                            <h4>Chi phí nhân sự cao</h4>
+                            <p style="font-size: 0.7em;">Lương nhân viên trực chat 24/7 là gánh nặng lớn. Hiệu suất giảm
+                                dần theo thời gian.</p>
+                        </div>
+                        <div class="card accent-card fragment fade-up">
+                            <div class="icon-box"><i data-lucide="repeat"></i></div>
+                            <h4>Công việc lặp lại</h4>
+                            <p style="font-size: 0.7em;">Hỏi giá, địa chỉ, menu... chiếm 80% thời gian hội thoại, gây
+                                nhàm chán và dễ sai sót.</p>
+                        </div>
+                        <div class="card fragment fade-up">
+                            <div class="icon-box"><i data-lucide="credit-card"></i></div>
+                            <h4>Đối soát thủ công</h4>
+                            <p style="font-size: 0.7em;">Kiểm tra bill chuyển khoản ngân hàng mất thời gian, dễ nhầm khi
+                                lượng khách lớn.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: Solution -->
+            <section>
+                <div class="slide-content">
+                    <h2>AI4All: Bộ Não Số Thông Minh</h2>
+                    <p>Giải pháp AI tích hợp đa kênh (Omnichannel) hoạt động như một nhân viên xuất sắc nhất của bạn.
+                    </p>
+                    <div style="margin-top: 40px;">
+                        <div class="card fragment highlight-current-blue" style="border-left-width: 10px;">
+                            <h4 style="margin-bottom: 10px;"><i data-lucide="zap"
+                                    style="vertical-align: middle; margin-right: 15px; color: gold;"></i> Siêu nhanh &
+                                Luôn thức</h4>
+                            <p style="font-size: 0.8em;">Phản hồi tức thì < 3 giây, 24/7/365 không mệt mỏi.</p>
+                        </div>
+                        <div class="card accent-card fragment highlight-current-blue"
+                            style="margin-top: 20px; border-left-width: 10px;">
+                            <h4 style="margin-bottom: 10px;"><i data-lucide="brain"
+                                    style="vertical-align: middle; margin-right: 15px; color: var(--secondary-color);"></i>
+                                Hiểu sâu dữ liệu của bạn</h4>
+                            <p style="font-size: 0.8em;">Tự học từ file PDF, hình ảnh Menu, Bảng giá nhờ công nghệ RAG
+                                tiên tiến.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: Key Features -->
+            <section>
+                <div class="slide-content">
+                    <h2>Tính năng "Hái ra tiền"</h2>
+                    <ul style="font-size: 0.8em;">
+                        <li class="fragment"><strong>Thanh toán tự động:</strong> Tích hợp SePay & Ngân hàng. AI tự
+                            check tài khoản, xác nhận đơn ngay lập tức.</li>
+                        <li class="fragment"><strong>Dữ liệu Real-time:</strong> Kết nối với PMS Khách sạn/Kho hàng để
+                            báo phòng trống/tồn kho chính xác theo giây.</li>
+                        <li class="fragment"><strong>Hàng rào bảo vệ (Guardrails):</strong> Đảm bảo AI chỉ nói về thương
+                            hiệu bạn, không nhắc đối thủ, luôn chuẩn mực.</li>
+                        <li class="fragment"><strong>Bàn giao thông minh:</strong> Tự động báo về Zalo/App khi có khách
+                            cần hỗ trợ đặc biệt.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slide 5: ROI -->
+            <section>
+                <div class="slide-content">
+                    <h2>Hiệu quả vượt trội (ROI)</h2>
+                    <div class="roi-box">
+                        <div class="roi-item fragment">
+                            <p style="font-size: 0.6em; margin-bottom: 10px;">TIẾT KIỆM CHI PHÍ</p>
+                            <div class="roi-value">-90%</div>
+                            <p style="font-size: 0.5em; opacity: 0.7;">So với thuê nhân sự trực chat</p>
+                        </div>
+                        <div style="border-left: 1px solid rgba(255,255,255,0.2);"></div>
+                        <div class="roi-item fragment">
+                            <p style="font-size: 0.6em; margin-bottom: 10px;">TĂNG DOANH THU</p>
+                            <div class="roi-value">+40%</div>
+                            <p style="font-size: 0.5em; opacity: 0.7;">Nhờ phản hồi tức thì & chốt đơn tự động</p>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 40px; font-weight: 600; color: var(--secondary-color);"
+                        class="fragment">"AI4All tự trả tiền cho chính nó ngay trong tháng đầu tiên"</p>
+                </div>
+            </section>
+
+            <!-- Slide 6: Ease of Use -->
+            <section>
+                <div class="slide-content">
+                    <h2>Triển khai trong 5 phút</h2>
+                    <div class="grid-2">
+                        <div class="card fragment">
+                            <span class="big-number">01</span>
+                            <h4>Kết nối</h4>
+                            <p style="font-size: 0.7em;">Link Fanpage Facebook/Zalo OA của bạn vào hệ thống chỉ với 1
+                                click.</p>
+                        </div>
+                        <div class="card accent-card fragment">
+                            <span class="big-number">02</span>
+                            <h4>Cung cấp dữ liệu</h4>
+                            <p style="font-size: 0.7em;">Upload tài liệu, ảnh menu hoặc link Web. AI sẽ tự động "học"
+                                toàn bộ.</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 50px;" class="fragment">
+                        <i data-lucide="arrow-down" style="color: var(--secondary-color);"></i>
+                        <p style="font-weight: 700;">Hệ thống AI sẵn sàng kiếm tiền cho bạn!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 7: Pricing -->
+            <section data-background-color="#f8f9fa">
+                <div class="slide-content" style="align-items: center;">
+                    <h2>Bảng giá minh bạch</h2>
+                    <div class="grid-2" style="width: 100%;">
+                        <div class="card" style="text-align: center;">
+                            <h3>Basic</h3>
+                            <div style="font-size: 2em; font-weight: 700; margin: 20px 0;">0đ</div>
+                            <ul style="font-size: 0.6em; text-align: left;">
+                                <li>1 Fanpage</li>
+                                <li>Dữ liệu RAG cơ bản</li>
+                                <li>Giới hạn 500 tin nhắn/tháng</li>
+                            </ul>
+                        </div>
+                        <div class="card accent-card"
+                            style="text-align: center; background: var(--primary-color); color: white;">
+                            <h3 style="color: white;">Business</h3>
+                            <div
+                                style="font-size: 2em; font-weight: 700; margin: 20px 0; color: var(--secondary-color);">
+                                990k<span style="font-size: 0.4em;">/tháng</span></div>
+                            <ul style="font-size: 0.6em; text-align: left;">
+                                <li>Đa kênh (FB, Zalo, Web)</li>
+                                <li>Tích hợp SePay/Ngân hàng</li>
+                                <li>Kết nối Hệ thống Real-time</li>
+                                <li>Không giới hạn tin nhắn</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 10: CTA -->
+            <section data-background="linear-gradient(225deg, #00A3AD 0%, #003366 100%)">
+                <div style="color: white; text-align: center;">
+                    <h2 style="color: white; border: none;">Bắt đầu ngay hôm nay</h2>
+                    <p style="font-size: 1.2em; margin-bottom: 50px;">Tặng 7 ngày dùng thử miễn phí - Không cần thẻ tín
+                        dụng</p>
+
+                    <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 50px;">
+                        <div class="card" style="background: white; color: black; padding: 20px; width: 250px;">
+                            <p style="font-size: 0.6em; margin: 0;">Quét dùng thử Demo</p>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://m.me/yourfanpage"
+                                alt="QR Code" style="margin-top: 10px;">
+                        </div>
+                        <div style="text-align: left;">
+                            <p><i data-lucide="phone"></i> Hotline: 09xx.xxx.xxx</p>
+                            <p><i data-lucide="globe"></i> Website: ai4all.vn</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+        <div class="footer">AI4All Presentation | © 2026 AI Solutions</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            center: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            controls: true,
+            progress: true,
+            slideNumber: true,
+            width: 1100,
+            height: 700,
+            margin: 0.1,
+            minScale: 0.2,
+            maxScale: 1.5
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

@@ -60,12 +60,24 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS document_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    embedding TEXT NOT NULL, -- JSON string array
+    chunk_index INTEGER NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS whitelist_emails (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     added_by TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE INDEX IF NOT EXISTS idx_chunks_doc ON document_chunks(doc_id);
+  CREATE INDEX IF NOT EXISTS idx_chunks_tenant ON document_chunks(tenant_id);
 
   CREATE TABLE IF NOT EXISTS conversations (
     id TEXT PRIMARY KEY,
@@ -306,6 +318,23 @@ const documents = {
         const row = db.prepare(`SELECT COUNT(*) as totalDocs, COALESCE(SUM(chunks_count), 0) as totalChunks FROM documents WHERE tenant_id = ?`).get(tenantId);
         return { totalDocuments: row.totalDocs, totalChunks: row.totalChunks };
     },
+};
+
+// ─── Document Chunks ───
+const documentChunks = {
+    create(docId, tenantId, content, embedding, index) {
+        db.prepare(`INSERT INTO document_chunks (doc_id, tenant_id, content, embedding, chunk_index) VALUES (?, ?, ?, ?, ?)`).run(
+            docId, tenantId, content, JSON.stringify(embedding), index
+        );
+    },
+
+    getByTenant(tenantId) {
+        return db.prepare(`SELECT * FROM document_chunks WHERE tenant_id = ?`).all(tenantId);
+    },
+
+    deleteByDoc(docId) {
+        db.prepare(`DELETE FROM document_chunks WHERE doc_id = ?`).run(docId);
+    }
 };
 
 // ─── Whitelist ───
@@ -634,4 +663,4 @@ if (!adminTenant) {
 
 console.log('💾 SQLite database initialized at', config.DB_PATH);
 
-module.exports = { db, tenants, fbConfig, settings, documents, whitelist, conversations, messages, notifications, orders, paymentHistory, platformSettings, plansMgr };
+module.exports = { db, tenants, fbConfig, settings, documents, documentChunks, whitelist, conversations, messages, notifications, orders, paymentHistory, platformSettings, plansMgr };
