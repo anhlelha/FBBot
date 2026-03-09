@@ -4,7 +4,6 @@ const { platformSettings } = require('./database');
 
 let genAI;
 let model;
-let embedModel;
 
 function initAI() {
     if (!config.GEMINI_API_KEY) {
@@ -13,8 +12,7 @@ function initAI() {
     }
     genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
     model = genAI.getGenerativeModel({ model: config.DEFAULT_AI_MODEL });
-    embedModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
-    console.log(`🤖 Gemini AI initialized (${config.DEFAULT_AI_MODEL} + gemini-embedding-001)`);
+    console.log(`🤖 Gemini AI initialized (${config.DEFAULT_AI_MODEL})`);
 }
 
 async function generateResponse(userMessage, tenantSettings, context) {
@@ -80,10 +78,4 @@ async function generateResponse(userMessage, tenantSettings, context) {
     }
 }
 
-async function getEmbedding(text) {
-    if (!embedModel) throw new Error('AI not initialized');
-    const result = await embedModel.embedContent(text);
-    return result.embedding.values;
-}
-
-module.exports = { initAI, generateResponse, getEmbedding };
+module.exports = { initAI, generateResponse };

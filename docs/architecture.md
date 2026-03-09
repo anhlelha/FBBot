@@ -13,7 +13,8 @@ C4Context
     System(platform, "Chatbot Platform", "Nền tảng SaaS multi-tenant AI chatbot")
 
     System_Ext(google, "Google OAuth", "Xác thực người dùng")
-    System_Ext(gemini, "Google Gemini API", "LLM & Embedding generation")
+    System_Ext(gemini, "Google Gemini API", "LLM generation")
+    System_Ext(vertexRag, "Vertex AI RAG Engine", "Managed corpus, chunking, embedding, vector search")
     System_Ext(fb, "Facebook Messenger", "Kênh chat với khách")
 
     Rel(owner, platform, "Quản lý tenants")
@@ -22,7 +23,8 @@ C4Context
     Rel(fb, platform, "Webhook events")
     Rel(platform, fb, "Send API responses")
     Rel(platform, google, "Verify OAuth tokens")
-    Rel(platform, gemini, "Generate AI responses & embeddings")
+    Rel(platform, gemini, "Generate AI responses")
+    Rel(platform, vertexRag, "Upload files, retrieve contexts")
 ```
 
 | Element | Type | Description |
@@ -32,7 +34,8 @@ C4Context
 | Hotel Guest | Person | Người dùng cuối chat trên FB Messenger |
 | Chatbot Platform | System | Node.js Express app, multi-tenant |
 | Google OAuth | External | Xác thực đăng nhập bằng Gmail |
-| Google Gemini | External | AI generation + text embedding |
+| Google Gemini | External | AI generation (LLM) |
+| Vertex AI RAG Engine | External | Managed chunking, embedding, vector search |
 | Facebook Messenger | External | Kênh liên lạc với khách |
 
 ## Level 2 — Container Diagram
@@ -56,6 +59,7 @@ C4Container
 
     System_Ext(google, "Google OAuth")
     System_Ext(gemini, "Gemini API")
+    System_Ext(vertexRag, "Vertex AI RAG Engine")
     System_Ext(fb, "FB Messenger (Chat & Web Plugin)")
 
     Rel(tenant, landing, "Đăng ký/đăng nhập")
@@ -65,9 +69,10 @@ C4Container
     Rel(dashboard, api, "REST API calls")
     Rel(ownerUI, api, "REST API calls")
     Rel(api, db, "Read/Write")
-    Rel(api, fs, "Read/Write files")
+    Rel(api, fs, "Read/Write files (backup)")
     Rel(api, google, "Verify tokens")
     Rel(api, gemini, "AI generation")
+    Rel(api, vertexRag, "Upload files, retrieve contexts")
     Rel(fb, api, "Webhook POST")
     Rel(api, fb, "Send API")
     Rel(guest, fb, "Chat qua App hoặc Web Plugin")
@@ -90,23 +95,23 @@ C4Component
 
     Container_Boundary(api, "Express API Server") {
         Component(auth, "Auth Module", "auth.js", "Google OAuth verify + session middleware")
-        Component(tenantMgr, "Tenant Manager", "tenantManager.js", "CRUD tenants, manage AI/VS instances")
-        Component(aiFactory, "AI Factory", "ai.js", "Create per-tenant Gemini instances")
+        Component(tenantMgr, "Tenant Manager", "tenantManager.js", "CRUD tenants, manage AI instances")
+        Component(aiFactory, "AI Factory", "ai.js", "Gemini LLM generation")
         Component(kb, "Knowledge Base", "knowledgeBase.js", "Tenant-scoped document management")
-        Component(vs, "Vector Store", "vectorStore.js", "Per-tenant cosine similarity search")
+        Component(vertexRag, "Vertex RAG Client", "vertexRag.js", "GCP Vertex AI RAG Engine wrapper")
         Component(webhook, "Webhook Handler", "webhook.js", "Single /webhook endpoint, routes by page_id")
         Component(messenger, "Messenger Client", "messenger.js", "FB Send API with tenant token")
         Component(guardrails, "Guardrails Engine", "guardrails.js", "Enforce Hard/Soft rules before AI gen")
         Component(database, "Database", "database.js", "SQLite schema + queries")
-        Component(config, "Config", "config.js", "Environment variables")
+        Component(config, "Config", "config.js", "Environment variables + GCP config")
     }
 
     Rel(auth, database, "Lookup/create tenant")
     Rel(tenantMgr, database, "CRUD operations")
     Rel(tenantMgr, aiFactory, "Create AI instances")
-    Rel(tenantMgr, vs, "Create VectorStore instances")
-    Rel(kb, vs, "Store/search embeddings")
-    Rel(kb, aiFactory, "Generate embeddings")
+    Rel(tenantMgr, vertexRag, "Retrieve contexts per corpus")
+    Rel(kb, vertexRag, "Upload/delete files to RAG corpus")
+    Rel(kb, database, "Store rag_file_name")
     Rel(webhook, tenantMgr, "Lookup tenant")
     Rel(webhook, messenger, "Send replies")
     Rel(webhook, guardrails, "Validate input/output")
@@ -227,6 +232,7 @@ erDiagram
         string status "active|suspended"
         int token_limit "Max tokens per month"
         int tokens_used "Current usage"
+        string corpus_name "Vertex AI RAG Corpus resource name"
         datetime created_at
     }
 
@@ -255,6 +261,7 @@ erDiagram
         int size
         string type ".pdf|.txt|.md|.csv"
         int chunks_count
+        string rag_file_name "Vertex AI RAG File resource name"
         datetime created_at
     }
 
@@ -275,24 +282,30 @@ erDiagram
 ## Deployment View
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Local Machine (Development)                     │
-│                                                  │
-│  ┌──────────────┐    ┌──────────────────────┐   │
-│  │ node server.js│    │  ngrok http 3000     │   │
-│  │  Port: 3000   │◄───│  *.ngrok-free.app    │   │
-│  └──────┬───────┘    └──────────────────────┘   │
-│         │                                        │
-│  ┌──────┴───────┐    ┌──────────────────────┐   │
-│  │ data/app.db  │    │ uploads/{tenantId}/   │   │
-│  │ (SQLite)     │    │ (documents)           │   │
-│  └──────────────┘    └──────────────────────┘   │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  GCP VM / Local Machine                               │
+│                                                       │
+│  ┌──────────────┐    ┌──────────────────────┐        │
+│  │ node server.js│    │  PM2 / nodemon       │        │
+│  │  Port: 3000   │◄───│  Process Manager     │        │
+│  └──────┬───────┘    └──────────────────────┘        │
+│         │                                             │
+│  ┌──────┴───────┐    ┌──────────────────────┐        │
+│  │ data/app.db  │    │ uploads/{tenantId}/   │        │
+│  │ (SQLite)     │    │ (local backup)        │        │
+│  └──────────────┘    └──────────────────────┘        │
+│         │                                             │
+│  ┌──────┴──────────────────────────────┐             │
+│  │ vertex_rag/gcp-key.json             │             │
+│  │ (Service Account credentials)       │             │
+│  └─────────────────────────────────────┘             │
+└──────────────────────────────────────────────────────┘
          │
-         ▼ External APIs
-┌────────┴─────────────────────────────┐
-│ Google OAuth │ Gemini API │ FB Graph │
-└──────────────────────────────────────┘
+         ▼ External APIs (GCP + Meta)
+┌────────┴──────────────────────────────────────┐
+│ Google OAuth │ Gemini API │ Vertex AI RAG │ FB │
+│              │            │ Engine        │    │
+└───────────────────────────────────────────────┘
 ```
 
 ## ADR — Architecture Decision Records
@@ -396,6 +409,28 @@ erDiagram
 | Database | SQLite (better-sqlite3) |
 | Auth | Google OAuth 2.0 (google-auth-library) |
 | Session | cookie-session (signed cookies) |
-| AI | Google Gemini API (gemini-2.5-flash + embedding) |
+| AI | Google Gemini API (gemini-2.5-flash) |
+| RAG Engine | Google Vertex AI RAG Engine (managed corpus + vector search) |
 | Channel | Facebook Messenger (Graph API v21.0) |
 | Tunnel | ngrok (development) |
+
+---
+
+### ADR-07: RAG Backend — Self-managed vs Vertex AI RAG Engine
+
+| Tiêu chí | Self-managed (Phase 1) | Vertex AI RAG Engine ✅ |
+|---|---|---|
+| Chunking quality | ❌ Fixed-size, cắt giữa câu | ✅ Configurable + semantic splitting |
+| Vector persistence | ⚠️ SQLite JSON (workaround) | ✅ Fully managed, persistent |
+| Search performance | ❌ O(N) brute-force | ✅ O(logN) HNSW indexed |
+| Scale limit | ~10K chunks | ~10M chunks |
+| Maintenance effort | 🔴 Cao | ✅ Zero — fully managed |
+| Multi-tenant | Manual Map per tenant | 1 Corpus per tenant |
+| File format support | PDF, TXT, MD, CSV | PDF, TXT, HTML, DOCX + auto-parse |
+| Cost (20 tenants) | Gemini Embedding free tier | ~$0.05-$0.18/tháng |
+| Setup complexity | Zero (npm install) | 🟡 Cần GCP project + auth |
+
+**Decision:** ✅ Vertex AI RAG Engine — Giải quyết tất cả hạn chế (persistence, chunking, scale). Chi phí ~$0.05-$0.18/tháng cho 20 tenants.
+
+> Chi tiết phân tích chi phí: xem [Component Design — Phần 8](./component-design.md)
+

@@ -24,6 +24,7 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'active',
     token_limit INTEGER NOT NULL DEFAULT ${config.DEFAULT_TRIAL_TOKEN_LIMIT},
     tokens_used INTEGER NOT NULL DEFAULT 0,
+    corpus_name TEXT, -- Vertex AI RAG Corpus Name
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -57,6 +58,7 @@ db.exec(`
     size INTEGER NOT NULL DEFAULT 0,
     type TEXT NOT NULL,
     chunks_count INTEGER NOT NULL DEFAULT 0,
+    rag_file_name TEXT, -- Vertex AI RAG File Name
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -165,6 +167,10 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_orders_transfer ON orders(transfer_content);
 `);
 
+// Migration for existing databases
+try { db.exec("ALTER TABLE tenants ADD COLUMN corpus_name TEXT;"); } catch (e) { }
+try { db.exec("ALTER TABLE documents ADD COLUMN rag_file_name TEXT;"); } catch (e) { }
+
 function generateId() {
     return crypto.randomUUID();
 }
@@ -199,7 +205,7 @@ const tenants = {
     },
 
     update(id, fields) {
-        const allowed = ['name', 'plan', 'status', 'token_limit', 'tokens_used'];
+        const allowed = ['name', 'plan', 'status', 'token_limit', 'tokens_used', 'corpus_name'];
         const sets = [];
         const values = [];
         for (const [key, val] of Object.entries(fields)) {
@@ -295,6 +301,10 @@ const documents = {
 
     updateChunks(id, chunksCount) {
         db.prepare(`UPDATE documents SET chunks_count = ? WHERE id = ?`).run(chunksCount, id);
+    },
+
+    updateRagFileName(id, ragFileName) {
+        db.prepare(`UPDATE documents SET rag_file_name = ? WHERE id = ?`).run(ragFileName, id);
     },
 
     getByTenant(tenantId) {

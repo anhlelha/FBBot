@@ -59,4 +59,12 @@ module.exports = {
     'hotline', 'tư vấn viên', 'nhân viên hỗ trợ',
     'gặp người', 'nói chuyện với người', 'kết nối nhân viên',
   ],
+
+  // Vertex AI RAG Engine
+  GCP_PROJECT_ID: process.env.GCP_PROJECT_ID,
+  GCP_LOCATION: process.env.GCP_LOCATION || 'asia-southeast1',
+  GCP_KEY_FILE: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  get GCP_RAG_BASE_URL() {
+    return `https://${this.GCP_LOCATION}-aiplatform.googleapis.com/v1beta1/projects/${this.GCP_PROJECT_ID}/locations/${this.GCP_LOCATION}`;
+  },
 };

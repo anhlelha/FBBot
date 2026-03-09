@@ -1,9 +1,8 @@
 const ai = require('./ai');
-const VectorStore = require('./vectorStore');
-const knowledgeBase = require('./knowledgeBase');
-const { tenants, fbConfig, settings, documents } = require('./database');
+const vertexRag = require('./vertexRag');
+const { tenants, fbConfig, settings } = require('./database');
 
-// In-memory cache: tenant AI instances & vector stores
+// In-memory cache: tenant AI instances & corpus names
 const tenantInstances = new Map();
 
 function getTenantInstance(tenantId) {
@@ -15,15 +14,11 @@ function getTenantInstance(tenantId) {
     if (!tenant) return null;
 
     const tenantSettings = settings.get(tenantId);
-    const vectorStore = new VectorStore();
-
-    // Load knowledge back into vector store from DB
-    knowledgeBase.loadTenantKnowledge(tenantId, vectorStore);
 
     const instance = {
         tenant,
         settings: tenantSettings,
-        vectorStore,
+        corpusName: tenant.corpus_name,
     };
 
     tenantInstances.set(tenantId, instance);
@@ -38,7 +33,7 @@ async function generateResponseForTenant(tenantId, userMessage) {
     const instance = getTenantInstance(tenantId);
     if (!instance) throw new Error('Tenant not found');
 
-    const { tenant, vectorStore } = instance;
+    const { tenant, corpusName } = instance;
     const tenantSettings = settings.get(tenantId);
 
     // Check token limit (skip for whitelist/pro)
@@ -48,13 +43,17 @@ async function generateResponseForTenant(tenantId, userMessage) {
         }
     }
 
-    // Search context from tenant's vector store
+    // Search context from Vertex AI RAG Corpus
     let context = '';
-    if (vectorStore.size > 0) {
-        const queryEmbedding = await ai.getEmbedding(userMessage);
-        const results = vectorStore.search(queryEmbedding, 5);
-        if (results.length > 0) {
-            context = results.map(r => r.text).join('\n\n---\n\n');
+    if (corpusName) {
+        try {
+            const results = await vertexRag.retrieveContexts(corpusName, userMessage, 5);
+            if (results.length > 0) {
+                context = results.map(r => r.text).join('\n\n---\n\n');
+            }
+        } catch (error) {
+            console.error(`⚠️ [${tenantId}] RAG Retrieval Error:`, error.message);
+            // Fallback: Continue without context if RAG fails
         }
     }
 
@@ -62,12 +61,7 @@ async function generateResponseForTenant(tenantId, userMessage) {
     const responseText = aiResult.text;
 
     // Use PRECISE totalTokenCount from Gemini
-    let tokensUsed = aiResult.tokensUsed;
-
-    // Add estimation for embedding if query was made (approx 1 token per 4 chars for query)
-    if (vectorStore.size > 0) {
-        tokensUsed += Math.ceil(userMessage.length / 4);
-    }
+    const tokensUsed = aiResult.tokensUsed;
 
     tenants.incrementTokens(tenantId, tokensUsed);
 

@@ -150,22 +150,124 @@ Giao tiếp trực tiếp với SDK của bộ sinh AI (Google Generative AI). C
 
 ---
 
-## 7. Lộ trình nâng cấp RAG (Phase 2)
+## 7. Lộ trình nâng cấp RAG → Vertex AI RAG Engine
 
-> Khi kết thúc Phase 1 MVP, các cải tiến sau sẽ được triển khai theo thứ tự ưu tiên:
+> Thay thế toàn bộ RAG pipeline tự quản lý bằng Google Vertex AI RAG Engine (managed service).
 
-### 🔴 Ưu tiên 1: Persist Vector Embeddings
-- **Vấn đề:** Restart server = mất hết embeddings.
-- **Giải pháp:** Serialize embeddings vào SQLite (cột BLOB trong bảng `documents`) hoặc tích hợp `sqlite-vss`.
-- **Effort:** ~4 giờ. Thay đổi `vectorStore.js` + `database.js`.
+### 7.1. Kiến trúc mới
 
-### 🟡 Ưu tiên 2: Recursive Text Splitting
-- **Vấn đề:** Fixed-size chunking cắt giữa câu.
-- **Giải pháp:** Thay `chunkText()` bằng `RecursiveCharacterTextSplitter` (từ `langchain/text_splitter` hoặc tự viết).
-- **Effort:** ~2 giờ. Chỉ thay đổi `knowledgeBase.js`.
+**Upload Flow:** File → (Local/GCS) → `importRagFiles()` → RAG Corpus (1 per tenant)
+**Query Flow:** User message → `retrieveContexts()` → Context chunks → `generateContent()` → AI Reply
 
-### 🟢 Ưu tiên 3: ChromaDB (khi scale >100 tenants)
-- **Vấn đề:** In-memory array không scale.
-- **Giải pháp:** Thay `VectorStore` class bằng ChromaDB client. Mỗi tenant = 1 Collection.
-- **Effort:** ~8 giờ. Cần Docker setup + thay đổi `vectorStore.js` + `tenantManager.js`.
+### 7.2. Thành phần bị thay thế
+
+| Trước (tự quản lý) | Sau (Vertex AI managed) |
+|---|---|
+| `chunkText()` — fixed 1000 chars | Auto chunking (semantic splitting) |
+| `getEmbedding()` — gọi API | Auto embedding (`text-embedding-004`) |
+| `VectorStore` class — in-memory | Managed Vector Store (HNSW indexed) |
+| `cosineSimilarity()` — brute-force | Optimized search `O(logN)` |
+| `document_chunks` SQLite table | Fully managed, persistent |
+
+### 7.3. Files bị ảnh hưởng
+
+| File | Mức độ |
+|---|---|
+| `vectorStore.js` | 🔴 DELETE |
+| `knowledgeBase.js` | 🔴 Major refactor |
+| `tenantManager.js` | 🔴 Major refactor |
+| `ai.js` | 🟡 Bỏ `getEmbedding()` |
+| `config.js` | 🟡 Thêm GCP env vars |
+| `database.js` | 🟢 Thêm `corpus_name`, bỏ `document_chunks` |
+
+---
+
+## 8. Phân tích chi phí Vertex AI RAG Engine
+
+> Giả định: 20 tenants × 10-50 docs/tenant, ~10K tokens/doc, 200-500 queries/ngày
+
+### 8.1. Chi phí từng thành phần
+
+| Thành phần | Đơn giá | Min/tháng | Max/tháng |
+|---|---|---|---|
+| **Embedding** (query) | $0.10/1M tokens | $0.03 | $0.08 |
+| **Vector Storage** | $3.00/GB | $0.02 | $0.10 |
+| **Retrieval API** (`retrieveContexts`) | $0 (chỉ tính embedding) | $0 | $0 |
+| **File Storage** (Local) | $0 | $0 | $0 |
+| **Embedding ingest** (1 lần) | $0.10/1M tokens | $0.20 | $1.00 |
+| **TỔNG** | | **~$0.05/tháng** | **~$0.18/tháng** |
+
+> **Lưu ý:** KHÔNG dùng Grounding API ($2.50/1K requests). Dùng `retrieveContexts()` lấy context rồi tự gọi `generateContent()`.
+
+### 8.2. So sánh Local vs GCS Storage
+
+| Tiêu chí | Local (khuyến nghị Phase 1) | GCS (khi scale) |
+|---|---|---|
+| Chi phí | $0 | $0.02/GB/tháng |
+| Import RAG Engine | Upload buffer (max 25MB/file) | GCS URI (không giới hạn) |
+| Độ bền | ⚠️ Mất nếu server hỏng | ✅ 99.99% SLA |
+| Multi-server | ❌ | ✅ |
+
+**Khuyến nghị:** Local storage cho giai đoạn 20 tenants. Chuyển GCS khi >50 tenants hoặc multi-server.
+
+---
+
+## 9. Facebook Content Ingestion cho RAG
+
+> Khả năng trích xuất nội dung từ Facebook để đưa vào Knowledge Base.
+
+### 9.1. Trích xuất bài viết cụ thể (từ URL)
+
+**Ví dụ URL:** `https://web.facebook.com/photo/?fbid=1308831211293306&set=a.608908887952212`
+
+| Tiêu chí | Đánh giá |
+|---|---|
+| **Khả thi?** | ✅ **CÓ** — qua Facebook Graph API |
+| **API endpoint** | `GET /{post-id}?fields=message,attachments,created_time` |
+| **Authentication** | `page_access_token` (đã có sẵn trong `tenant_fb_config`) |
+| **Dữ liệu lấy được** | Text (`message`), caption ảnh (`attachments.description`), link, thời gian |
+| **Hạn chế** | Chỉ lấy được bài viết từ Page mà tenant đã kết nối (có token) |
+
+**Flow đề xuất:**
+```
+Tenant paste URL → Parse fbid → GET /{fbid}?fields=message,attachments
+→ Extract text → Import vào RAG Corpus
+```
+
+### 9.2. Quét bài viết mới từ Page (auto-crawl)
+
+**Ví dụ URL:** `https://web.facebook.com/daihoctaichinhnganhanghanoi`
+
+| Tiêu chí | Đánh giá |
+|---|---|
+| **Khả thi?** | ✅ **CÓ** — nhưng **chỉ với Page đã kết nối** |
+| **API endpoint** | `GET /{page-id}/feed?fields=id,message,created_time&limit=25` |
+| **Authentication** | `page_access_token` + quyền `pages_read_engagement` |
+| **Auto-sync** | Cron job định kỳ (mỗi 1-6 giờ) gọi `/feed` → so sánh post mới → import RAG |
+| **Hạn chế quan trọng** | ❌ **Không thể crawl Page của người khác** (Page Public Content Access cần App Review của Meta) |
+
+**Kịch bản thực tế:**
+
+| Kịch bản | Khả thi? | Giải pháp |
+|---|---|---|
+| Tenant crawl Page **của chính mình** | ✅ Có | Dùng `page_access_token` hiện tại |
+| Tenant crawl Page **đối tác/trường** | ⚠️ Khó | Cần Page đó cấp token hoặc App Review |
+| Scraping (không dùng API) | ❌ Không | Vi phạm ToS Meta, bị block |
+
+### 9.3 Flow đề xuất cho Facebook Content Ingestion
+
+```
+1. Tenant nhập URL bài viết cụ thể
+   → Parse fbid/post_id từ URL
+   → Gọi Graph API GET /{post_id}
+   → Lấy message + attachments
+   → Import text vào RAG Corpus
+
+2. Tenant bật "Auto-sync Page" (Page đã kết nối)
+   → Cron job mỗi 6h: GET /{page_id}/feed?since=last_sync
+   → Filter bài viết mới
+   → Import text vào RAG Corpus
+   → Cập nhật last_sync timestamp
+```
+
 

@@ -12,6 +12,7 @@ const tenantManager = require('./src/tenantManager');
 const messenger = require('./src/messenger');
 const conversationModule = require('./src/conversation');
 const payment = require('./src/payment');
+const vertexRag = require('./src/vertexRag');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.MAX_FILE_SIZE } });
@@ -133,7 +134,22 @@ app.post('/api/documents', requireAuth, upload.single('file'), async (req, res) 
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
         const instance = tenantManager.getTenantInstance(req.tenant.id);
-        const result = await knowledgeBase.addDocument(req.tenant.id, req.file, instance.vectorStore);
+
+        // 1. Ensure Corpus exists for this tenant
+        let corpusName = instance.corpusName;
+        if (!corpusName) {
+            console.log(`🏗️ Creating new RAG Corpus for tenant ${req.tenant.id}...`);
+            corpusName = await vertexRag.createCorpus(`corpus-${req.tenant.id}`);
+
+            // Persist to DB
+            tenants.update(req.tenant.id, { corpus_name: corpusName });
+
+            // Refresh instance cache
+            instance.corpusName = corpusName;
+        }
+
+        // 2. Add document via Vertex AI
+        const result = await knowledgeBase.addDocument(req.tenant.id, req.file, corpusName);
         res.json(result);
     } catch (error) {
         console.error('❌ Upload error:', error.message);
@@ -141,15 +157,19 @@ app.post('/api/documents', requireAuth, upload.single('file'), async (req, res) 
     }
 });
 
-app.delete('/api/documents/:id', requireAuth, (req, res) => {
-    const doc = documents.getById(req.params.id);
-    if (!doc || doc.tenant_id !== req.tenant.id) {
-        return res.status(404).json({ error: 'Document not found' });
-    }
+app.delete('/api/documents/:id', requireAuth, async (req, res) => {
+    try {
+        const doc = documents.getById(req.params.id);
+        if (!doc || doc.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
 
-    const instance = tenantManager.getTenantInstance(req.tenant.id);
-    knowledgeBase.removeDocument(req.params.id, instance.vectorStore);
-    res.json({ ok: true });
+        await knowledgeBase.removeDocument(req.params.id);
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('❌ Delete error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ─── Chat API (tenant-scoped) ───
