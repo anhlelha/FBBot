@@ -308,6 +308,22 @@ erDiagram
 └───────────────────────────────────────────────┘
 ```
 
+### Infrastructure Details
+
+| Item | Value |
+|---|---|
+| **Cloud Provider** | Google Cloud Platform (GCP) |
+| **VM Instance IP** | `34.9.136.241` |
+| **SSH User** | `anhlh48` |
+| **Project Directory** | `~/fbbot` |
+| **Service Account Key** | `~/fbbot/vertex_rag/ai4all-rag-engine-cbf3d4caee11.json` |
+| **Process Manager** | PM2 (`hotel-chatbot-fb`) |
+| **Web Server** | Nginx (Reverse Proxy to 3000) |
+| **Database** | SQLite (`~/fbbot/data/app.db`) |
+
+> [!TIP]
+> Use `./scripts/deploy-vm.sh` to quickly update the server from the latest GitHub code.
+
 ## ADR — Architecture Decision Records
 
 ### ADR-01: Database — SQLite vs PostgreSQL vs MongoDB
