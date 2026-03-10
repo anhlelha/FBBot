@@ -292,12 +292,13 @@ app.post('/api/documents/import-gdrive', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Missing fileIds or accessToken' });
         }
 
-        const instance = tenantManager.getTenantInstance(req.tenant.id);
-        let corpusName = instance.corpusName;
+        const tenantData = tenants.getById(req.tenant.id);
+        let corpusName = tenantData.corpus_name;
         if (!corpusName) {
             corpusName = await vertexRag.createCorpus(`corpus-${req.tenant.id}`);
             tenants.update(req.tenant.id, { corpus_name: corpusName });
-            instance.corpusName = corpusName;
+            const instance = tenantManager.getTenantInstance(req.tenant.id);
+            if (instance) instance.corpusName = corpusName;
         }
 
         const results = [];

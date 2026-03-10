@@ -37,6 +37,7 @@ class GoogleDriveService {
             );
             buffer = Buffer.from(res.data);
             filename = filename.replace(/\.[^.]+$/, '') + '.pdf';
+            if (!filename.endsWith('.pdf')) filename += '.pdf';
         } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
             const res = await drive.files.export(
                 { fileId, mimeType: 'text/csv' },
@@ -44,6 +45,7 @@ class GoogleDriveService {
             );
             buffer = Buffer.from(res.data);
             filename = filename.replace(/\.[^.]+$/, '') + '.csv';
+            if (!filename.endsWith('.csv')) filename += '.csv';
         } else if (mimeType === 'application/vnd.google-apps.presentation') {
             const res = await drive.files.export(
                 { fileId, mimeType: 'application/pdf' },
@@ -51,6 +53,7 @@ class GoogleDriveService {
             );
             buffer = Buffer.from(res.data);
             filename = filename.replace(/\.[^.]+$/, '') + '.pdf';
+            if (!filename.endsWith('.pdf')) filename += '.pdf';
         } else {
             // Regular file — download directly
             const res = await drive.files.get(
