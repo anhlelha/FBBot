@@ -25,7 +25,7 @@
             }
 
             loadDashboard();
-            loadDocuments();
+            loadKnowledgeBase();
             loadSettings();
         } catch (e) {
             window.location.href = '/';
@@ -70,15 +70,56 @@
         }
     }
 
-    // ─── Documents ───
+    // ─── Knowledge Base (Folders + Documents) ───
+    let currentFolderId = null; // null = show all, 'root' = root only
+    let folderPath = []; // [{id, name}, ...]
+
+    async function loadKnowledgeBase() {
+        await loadFolders();
+        await loadDocuments();
+    }
+
+    async function loadFolders() {
+        try {
+            let url = '/api/folders';
+            if (currentFolderId) url += `?parent_id=${currentFolderId}`;
+            const res = await fetch(url);
+            const folderList = await res.json();
+            const container = document.getElementById('foldersList');
+
+            if (folderList.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = folderList.map(f => `
+                <div class="folder-item" ondblclick="navigateFolder('${f.id}', '${f.name.replace(/'/g, "\\'")}')">
+                    <span class="folder-icon">📁</span>
+                    <span class="folder-name">${f.name}</span>
+                    <button class="folder-menu-btn" onclick="event.stopPropagation(); folderMenu('${f.id}', '${f.name.replace(/'/g, "\\'")}')" title="Tùy chọn">⋯</button>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Folders load error:', e);
+        }
+    }
+
     async function loadDocuments() {
         try {
-            const res = await fetch('/api/documents');
+            let url = '/api/documents';
+            if (currentFolderId) url += `?folder_id=${currentFolderId}`;
+            else url += '?folder_id=root';
+            const res = await fetch(url);
             const docs = await res.json();
             const list = document.getElementById('docsList');
 
-            if (docs.length === 0) {
+            if (docs.length === 0 && !document.getElementById('foldersList').innerHTML) {
                 list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:24px">Chưa có tài liệu nào. Upload file để bắt đầu!</p>';
+                return;
+            }
+
+            if (docs.length === 0) {
+                list.innerHTML = '';
                 return;
             }
 
@@ -87,8 +128,8 @@
           <div class="doc-info">
             <div class="doc-icon">${doc.type === 'pdf' ? '📄' : '📝'}</div>
             <div>
-              <div class="doc-name">${doc.filename}</div>
-              <div class="doc-meta">${doc.chunks_count} chunks · ${(doc.size / 1024).toFixed(1)} KB</div>
+              <div class="doc-name">${doc.filename}${doc.source === 'gdrive' ? ' <span style="font-size:10px;color:var(--text-muted)">📎 Drive</span>' : ''}</div>
+              <div class="doc-meta">${(doc.size / 1024).toFixed(1)} KB</div>
             </div>
           </div>
           <div class="doc-actions">
@@ -100,6 +141,148 @@
       `).join('');
         } catch (e) {
             console.error('Docs load error:', e);
+        }
+    }
+
+    function updateBreadcrumb() {
+        const bc = document.getElementById('kbBreadcrumb');
+        let html = `<span class="breadcrumb-item${!currentFolderId ? ' active' : ''}" onclick="navigateToRoot()">📁 Tất cả</span>`;
+        for (let i = 0; i < folderPath.length; i++) {
+            const isLast = i === folderPath.length - 1;
+            html += `<span class="breadcrumb-sep">›</span>`;
+            html += `<span class="breadcrumb-item${isLast ? ' active' : ''}" onclick="navigateToBreadcrumb(${i})">${folderPath[i].name}</span>`;
+        }
+        bc.innerHTML = html;
+    }
+
+    window.navigateToRoot = function () {
+        currentFolderId = null;
+        folderPath = [];
+        updateBreadcrumb();
+        loadKnowledgeBase();
+    };
+
+    window.navigateFolder = function (id, name) {
+        currentFolderId = id;
+        folderPath.push({ id, name });
+        updateBreadcrumb();
+        loadKnowledgeBase();
+    };
+
+    window.navigateToBreadcrumb = function (index) {
+        const target = folderPath[index];
+        folderPath = folderPath.slice(0, index + 1);
+        currentFolderId = target.id;
+        updateBreadcrumb();
+        loadKnowledgeBase();
+    };
+
+    window.createFolder = async function () {
+        const name = prompt('Tên folder mới:');
+        if (!name || !name.trim()) return;
+        try {
+            await fetch('/api/folders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name.trim(), parent_id: currentFolderId }),
+            });
+            loadKnowledgeBase();
+        } catch (e) {
+            alert('Lỗi khi tạo folder');
+        }
+    };
+
+    window.folderMenu = function (id, name) {
+        const action = prompt(`Folder "${name}"\n\n1 = Đổi tên\n2 = Xoá\n\nNhập số:`);
+        if (action === '1') renameFolder(id, name);
+        else if (action === '2') deleteFolderById(id, name);
+    };
+
+    async function renameFolder(id, currentName) {
+        const newName = prompt('Tên mới:', currentName);
+        if (!newName || !newName.trim() || newName === currentName) return;
+        try {
+            await fetch(`/api/folders/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName.trim() }),
+            });
+            loadKnowledgeBase();
+        } catch (e) {
+            alert('Lỗi khi đổi tên folder');
+        }
+    }
+
+    async function deleteFolderById(id, name) {
+        if (!confirm(`Xoá folder "${name}"? Tài liệu bên trong sẽ chuyển về gốc.`)) return;
+        try {
+            await fetch(`/api/folders/${id}`, { method: 'DELETE' });
+            loadKnowledgeBase();
+        } catch (e) {
+            alert('Lỗi khi xoá folder');
+        }
+    }
+
+    // ─── Google Drive Picker ───
+    window.openGoogleDrivePicker = function () {
+        // Use Google Identity Services to get a user access token
+        const client = google.accounts.oauth2.initTokenClient({
+            client_id: currentTenant._googleClientId || document.querySelector('meta[name="google-client-id"]')?.content,
+            scope: 'https://www.googleapis.com/auth/drive.readonly',
+            callback: (tokenResponse) => {
+                if (tokenResponse.error) {
+                    console.error('OAuth error:', tokenResponse);
+                    return;
+                }
+                launchDrivePicker(tokenResponse.access_token);
+            },
+        });
+        client.requestAccessToken();
+    };
+
+    function launchDrivePicker(accessToken) {
+        const picker = new google.picker.PickerBuilder()
+            .addView(google.picker.ViewId.DOCS)
+            .addView(google.picker.ViewId.SPREADSHEETS)
+            .addView(google.picker.ViewId.PRESENTATIONS)
+            .addView(google.picker.ViewId.PDFS)
+            .setOAuthToken(accessToken)
+            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+            .setCallback((data) => handlePickerCallback(data, accessToken))
+            .setTitle('Chọn file để import vào Knowledge Base')
+            .build();
+        picker.setVisible(true);
+    }
+
+    async function handlePickerCallback(data, accessToken) {
+        if (data.action !== google.picker.Action.PICKED) return;
+
+        const fileIds = data.docs.map(d => d.id);
+        const fileNames = data.docs.map(d => d.name).join(', ');
+
+        const uploadStatus = document.getElementById('uploadStatus');
+        uploadStatus.hidden = false;
+        uploadStatus.className = 'upload-status loading';
+        uploadStatus.textContent = `⏳ Đang import ${fileIds.length} file từ Google Drive: ${fileNames}...`;
+
+        try {
+            const res = await fetch('/api/documents/import-gdrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileIds, accessToken, folder_id: currentFolderId }),
+            });
+            const result = await res.json();
+
+            const ok = result.imported.filter(r => r.status === 'ok').length;
+            const fail = result.imported.filter(r => r.status === 'error').length;
+
+            uploadStatus.className = fail > 0 ? 'upload-status' : 'upload-status success';
+            uploadStatus.textContent = `✅ Import hoàn tất: ${ok} thành công${fail > 0 ? `, ${fail} thất bại` : ''}`;
+            loadKnowledgeBase();
+            loadDashboard();
+        } catch (e) {
+            uploadStatus.className = 'upload-status error';
+            uploadStatus.textContent = `❌ Lỗi import: ${e.message}`;
         }
     }
 
@@ -116,7 +299,7 @@
         try {
             const res = await fetch('/api/documents/' + id, { method: 'DELETE' });
             if (res.ok) {
-                loadDocuments();
+                loadKnowledgeBase();
                 loadDashboard();
             } else {
                 const data = await res.json();

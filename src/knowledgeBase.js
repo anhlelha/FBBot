@@ -4,7 +4,7 @@ const config = require('./config');
 const vertexRag = require('./vertexRag');
 const { documents } = require('./database');
 
-async function addDocument(tenantId, file, corpusName) {
+async function addDocument(tenantId, file, corpusName, folderId = null, source = 'upload') {
     const ext = path.extname(file.originalname).toLowerCase();
     const supportedTypes = ['.pdf', '.txt', '.md', '.csv', '.docx'];
 
@@ -30,15 +30,15 @@ async function addDocument(tenantId, file, corpusName) {
         `Document for tenant ${tenantId}`
     );
 
-    const ragFileName = ragFileResponse.name; // projects/.../ragFiles/...
+    const ragFileName = ragFileResponse.name;
 
-    // Save Doc to DB (using rag_file_name to track in Vertex)
-    const docId = documents.create(tenantId, file.originalname, filePath, file.size, ext.slice(1));
+    // Save Doc to DB
+    const docId = documents.create(tenantId, file.originalname, filePath, file.size, ext.slice(1), folderId, source);
 
     // Update DB with rag_file_name
     documents.updateRagFileName(docId, ragFileName);
 
-    console.log(`✅ [${tenantId}] Document added: ${file.originalname} (RAG ID: ${ragFileName})`);
+    console.log(`✅ [${tenantId}] Document added: ${file.originalname} (RAG ID: ${ragFileName}, source: ${source})`);
     return { id: docId, filename: file.originalname, ragFileName };
 }
 
@@ -60,8 +60,8 @@ async function removeDocument(docId) {
     return deletedDoc;
 }
 
-function listDocuments(tenantId) {
-    return documents.getByTenant(tenantId);
+function listDocuments(tenantId, folderId = undefined) {
+    return documents.getByTenant(tenantId, folderId);
 }
 
 function getStats(tenantId) {

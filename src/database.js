@@ -50,6 +50,14 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS document_folders (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    parent_id TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS documents (
     id TEXT PRIMARY KEY,
     tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -58,7 +66,9 @@ db.exec(`
     size INTEGER NOT NULL DEFAULT 0,
     type TEXT NOT NULL,
     chunks_count INTEGER NOT NULL DEFAULT 0,
-    rag_file_name TEXT, -- Vertex AI RAG File Name
+    rag_file_name TEXT,
+    folder_id TEXT,
+    source TEXT NOT NULL DEFAULT 'upload',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -170,6 +180,8 @@ db.exec(`
 // Migration for existing databases
 try { db.exec("ALTER TABLE tenants ADD COLUMN corpus_name TEXT;"); } catch (e) { }
 try { db.exec("ALTER TABLE documents ADD COLUMN rag_file_name TEXT;"); } catch (e) { }
+try { db.exec("ALTER TABLE documents ADD COLUMN folder_id TEXT;"); } catch (e) { }
+try { db.exec("ALTER TABLE documents ADD COLUMN source TEXT NOT NULL DEFAULT 'upload';"); } catch (e) { }
 
 function generateId() {
     return crypto.randomUUID();
@@ -290,12 +302,49 @@ const settings = {
     },
 };
 
+// ─── Document Folders ───
+const folders = {
+    create(tenantId, name, parentId = null) {
+        const id = generateId();
+        db.prepare(`INSERT INTO document_folders (id, tenant_id, name, parent_id) VALUES (?, ?, ?, ?)`)
+            .run(id, tenantId, name, parentId);
+        return this.getById(id);
+    },
+
+    getById(id) {
+        return db.prepare(`SELECT * FROM document_folders WHERE id = ?`).get(id);
+    },
+
+    getByTenant(tenantId, parentId = null) {
+        if (parentId) {
+            return db.prepare(`SELECT * FROM document_folders WHERE tenant_id = ? AND parent_id = ? ORDER BY name`).all(tenantId, parentId);
+        }
+        return db.prepare(`SELECT * FROM document_folders WHERE tenant_id = ? AND parent_id IS NULL ORDER BY name`).all(tenantId);
+    },
+
+    getAllByTenant(tenantId) {
+        return db.prepare(`SELECT * FROM document_folders WHERE tenant_id = ? ORDER BY name`).all(tenantId);
+    },
+
+    rename(id, name) {
+        db.prepare(`UPDATE document_folders SET name = ? WHERE id = ?`).run(name, id);
+    },
+
+    delete(id) {
+        // Move docs in this folder to root
+        db.prepare(`UPDATE documents SET folder_id = NULL WHERE folder_id = ?`).run(id);
+        // Move sub-folders to root
+        db.prepare(`UPDATE document_folders SET parent_id = NULL WHERE parent_id = ?`).run(id);
+        db.prepare(`DELETE FROM document_folders WHERE id = ?`).run(id);
+    },
+};
+
 // ─── Documents ───
 const documents = {
-    create(tenantId, filename, filePath, size, type) {
+    create(tenantId, filename, filePath, size, type, folderId = null, source = 'upload') {
         const id = generateId();
-        db.prepare(`INSERT INTO documents (id, tenant_id, filename, path, size, type) VALUES (?, ?, ?, ?, ?, ?)`)
-            .run(id, tenantId, filename, filePath, size, type);
+        db.prepare(`INSERT INTO documents (id, tenant_id, filename, path, size, type, folder_id, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+            .run(id, tenantId, filename, filePath, size, type, folderId, source);
         return id;
     },
 
@@ -307,7 +356,17 @@ const documents = {
         db.prepare(`UPDATE documents SET rag_file_name = ? WHERE id = ?`).run(ragFileName, id);
     },
 
-    getByTenant(tenantId) {
+    moveToFolder(id, folderId) {
+        db.prepare(`UPDATE documents SET folder_id = ? WHERE id = ?`).run(folderId, id);
+    },
+
+    getByTenant(tenantId, folderId = undefined) {
+        if (folderId === null) {
+            return db.prepare(`SELECT * FROM documents WHERE tenant_id = ? AND folder_id IS NULL ORDER BY created_at DESC`).all(tenantId);
+        }
+        if (folderId !== undefined) {
+            return db.prepare(`SELECT * FROM documents WHERE tenant_id = ? AND folder_id = ? ORDER BY created_at DESC`).all(tenantId, folderId);
+        }
         return db.prepare(`SELECT * FROM documents WHERE tenant_id = ? ORDER BY created_at DESC`).all(tenantId);
     },
 
@@ -673,4 +732,4 @@ if (!adminTenant) {
 
 console.log('💾 SQLite database initialized at', config.DB_PATH);
 
-module.exports = { db, tenants, fbConfig, settings, documents, documentChunks, whitelist, conversations, messages, notifications, orders, paymentHistory, platformSettings, plansMgr };
+module.exports = { db, tenants, fbConfig, settings, documents, documentChunks, folders, whitelist, conversations, messages, notifications, orders, paymentHistory, platformSettings, plansMgr };

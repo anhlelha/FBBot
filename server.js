@@ -6,13 +6,14 @@ const config = require('./src/config');
 const ai = require('./src/ai');
 const webhookRouter = require('./src/webhook');
 const { requireAuth, requireOwner, requireOwnerRedirect, handleGoogleLogin, isOwner } = require('./src/auth');
-const { tenants, fbConfig, settings, documents, whitelist, conversations, messages, notifications, orders, platformSettings, plansMgr } = require('./src/database');
+const { tenants, fbConfig, settings, documents, folders, whitelist, conversations, messages, notifications, orders, platformSettings, plansMgr } = require('./src/database');
 const knowledgeBase = require('./src/knowledgeBase');
 const tenantManager = require('./src/tenantManager');
 const messenger = require('./src/messenger');
 const conversationModule = require('./src/conversation');
 const payment = require('./src/payment');
 const vertexRag = require('./src/vertexRag');
+const googleDrive = require('./src/googleDrive');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.MAX_FILE_SIZE } });
@@ -91,6 +92,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
             plan: req.tenant.plan,
             status: req.tenant.status,
             corpus_name: req.tenant.corpus_name,
+            _googleClientId: config.GOOGLE_CLIENT_ID,
         },
         isOwner: isOwner(req.tenant.email),
     });
@@ -131,7 +133,15 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
 
 // ─── Documents API (tenant-scoped) ───
 app.get('/api/documents', requireAuth, (req, res) => {
-    const docs = knowledgeBase.listDocuments(req.tenant.id);
+    const folderId = req.query.folder_id;
+    let docs;
+    if (folderId === 'root') {
+        docs = knowledgeBase.listDocuments(req.tenant.id, null);
+    } else if (folderId) {
+        docs = knowledgeBase.listDocuments(req.tenant.id, folderId);
+    } else {
+        docs = knowledgeBase.listDocuments(req.tenant.id);
+    }
     res.json(docs);
 });
 
@@ -155,7 +165,8 @@ app.post('/api/documents', requireAuth, upload.single('file'), async (req, res) 
         }
 
         // 2. Add document via Vertex AI
-        const result = await knowledgeBase.addDocument(req.tenant.id, req.file, corpusName);
+        const folderId = req.body?.folder_id || null;
+        const result = await knowledgeBase.addDocument(req.tenant.id, req.file, corpusName, folderId);
         res.json(result);
     } catch (error) {
         console.error('❌ Upload error:', error.message);
@@ -208,6 +219,110 @@ app.get('/api/documents/:id/download', requireAuth, (req, res) => {
         res.download(doc.path, doc.filename);
     } catch (error) {
         console.error('❌ Download error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ─── Folders API (tenant-scoped) ───
+app.get('/api/folders', requireAuth, (req, res) => {
+    const parentId = req.query.parent_id || null;
+    const folderList = folders.getByTenant(req.tenant.id, parentId);
+    res.json(folderList);
+});
+
+app.post('/api/folders', requireAuth, (req, res) => {
+    try {
+        const { name, parent_id } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Missing folder name' });
+        const folder = folders.create(req.tenant.id, name.trim(), parent_id || null);
+        res.json(folder);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/folders/:id', requireAuth, (req, res) => {
+    try {
+        const folder = folders.getById(req.params.id);
+        if (!folder || folder.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Folder not found' });
+        }
+        const { name } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Missing folder name' });
+        folders.rename(req.params.id, name.trim());
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/folders/:id', requireAuth, (req, res) => {
+    try {
+        const folder = folders.getById(req.params.id);
+        if (!folder || folder.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Folder not found' });
+        }
+        folders.delete(req.params.id);
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ─── Document Move API ───
+app.put('/api/documents/:id/move', requireAuth, (req, res) => {
+    try {
+        const doc = documents.getById(req.params.id);
+        if (!doc || doc.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+        const { folder_id } = req.body;
+        documents.moveToFolder(req.params.id, folder_id || null);
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ─── Google Drive Import API ───
+app.post('/api/documents/import-gdrive', requireAuth, async (req, res) => {
+    try {
+        const { fileIds, accessToken, folder_id } = req.body;
+        if (!fileIds || !fileIds.length || !accessToken) {
+            return res.status(400).json({ error: 'Missing fileIds or accessToken' });
+        }
+
+        const instance = tenantManager.getTenantInstance(req.tenant.id);
+        let corpusName = instance.corpusName;
+        if (!corpusName) {
+            corpusName = await vertexRag.createCorpus(`corpus-${req.tenant.id}`);
+            tenants.update(req.tenant.id, { corpus_name: corpusName });
+            instance.corpusName = corpusName;
+        }
+
+        const results = [];
+        for (const fileId of fileIds) {
+            try {
+                console.log(`📥 [GDrive] Downloading file ${fileId}...`);
+                const fileData = await googleDrive.downloadFile(fileId, accessToken);
+
+                const fakeFile = {
+                    originalname: fileData.filename,
+                    buffer: fileData.buffer,
+                    size: fileData.size,
+                };
+                const result = await knowledgeBase.addDocument(
+                    req.tenant.id, fakeFile, corpusName, folder_id || null, 'gdrive'
+                );
+                results.push({ fileId, ...result, status: 'ok' });
+            } catch (err) {
+                console.error(`❌ [GDrive] Error importing ${fileId}:`, err.message);
+                results.push({ fileId, status: 'error', error: err.message });
+            }
+        }
+        res.json({ imported: results });
+    } catch (error) {
+        console.error('❌ GDrive import error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
