@@ -18,6 +18,22 @@
 
 ## 2026
 
+### [2026-03-10] — MODIFY Workflow: Improved /ship robustness
+
+- **File:** `.agent/workflows/ship.md`
+- **Loại:** `MODIFY`
+- **Mô tả:** Cập nhật workflow /ship để gộp các lệnh Git thành block lệnh duy nhất có thể thực thi (turbo), tránh việc Agent bỏ sót bước push/commit cục bộ trước khi deploy. Thêm bước verify trạng thái sau khi deploy.
+
+---
+
+### [2026-03-10] — MODIFY Script: Enhanced deploy-vm.sh safety
+
+- **File:** `scripts/deploy-vm.sh`
+- **Loại:** `MODIFY`
+- **Mô tả:** Thêm `set -e` để dừng script ngay khi có lỗi. Chuyển từ `git pull` sang `git fetch && git reset --hard` trên VM để xử lý các xung đột file log (`DEBUG.LOG`) và đảm bảo môi trường production luôn khớp 100% với nhánh main.
+
+---
+
 ### [2026-03-10] — CREATE Skill: ship-feature
 
 - **File:** `.agent/skills/ship-feature/SKILL.md`

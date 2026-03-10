@@ -415,9 +415,9 @@
 
             const fbStatus = document.getElementById('fbStatus');
             if (data.fb?.page_id) {
-                fbStatus.innerHTML = `<div class="fb-connected">✅ Đã kết nối: <strong>${data.fb.page_name}</strong> (${data.fb.page_id})</div>`;
+                fbStatus.innerHTML = `<div class="fb-connected"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Đã kết nối: <strong>${data.fb.page_name}</strong> (${data.fb.page_id})</div>`;
             } else {
-                fbStatus.innerHTML = '<div class="fb-disconnected">❌ Chưa kết nối Facebook Page</div>';
+                fbStatus.innerHTML = '<div class="fb-disconnected"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 8px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>Chưa kết nối Facebook Page</div>';
             }
         } catch (e) {
             console.error('Settings load error:', e);
@@ -437,9 +437,9 @@
                     restrict_payment: document.getElementById('setRestrictPayment').checked ? 1 : 0,
                 }),
             });
-            alert('✅ Đã lưu cài đặt!');
+            alert('Thành công: Đã lưu cài đặt!');
         } catch (e) {
-            alert('❌ Lỗi khi lưu');
+            alert('Lỗi: Lỗi khi lưu');
         }
     });
 
@@ -457,14 +457,14 @@
             const data = await res.json();
 
             if (res.ok) {
-                alert(`✅ Đã kết nối: ${data.page_name} (${data.page_id})`);
+                alert(`Thành công: Đã kết nối: ${data.page_name} (${data.page_id})`);
                 loadSettings();
                 loadDashboard();
             } else {
-                alert('❌ ' + data.error);
+                alert('Lỗi: ' + data.error);
             }
         } catch (e) {
-            alert('❌ Lỗi kết nối');
+            alert('Lỗi: Lỗi kết nối');
         }
     });
 
