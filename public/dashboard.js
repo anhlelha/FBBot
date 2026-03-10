@@ -55,13 +55,6 @@
             document.getElementById('statDocs').textContent = data.knowledgeBase.totalDocuments;
             document.getElementById('statChunks').textContent = data.knowledgeBase.totalChunks;
 
-            if (data.tenant.corpus_name) {
-                const corpusId = data.tenant.corpus_name.split('/').pop();
-                document.getElementById('statCorpus').textContent = corpusId;
-                document.getElementById('statCorpus').title = data.tenant.corpus_name;
-            } else {
-                document.getElementById('statCorpus').textContent = 'Chưa tạo';
-            }
 
             if (data.fbConnected) {
                 document.getElementById('statFb').textContent = '✅ Đã kết nối';
