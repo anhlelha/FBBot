@@ -18,6 +18,22 @@
 
 ## 2026
 
+### [2026-03-10] — CREATE Skill: ship-feature
+
+- **File:** `.agent/skills/ship-feature/SKILL.md`
+- **Loại:** `CREATE`
+- **Mô tả:** Tự động hóa quy trình đẩy code lên Git và deploy lên GCP VM sau khi hoàn thành tính năng.
+
+---
+
+### [2026-03-10] — CREATE Workflow: /ship
+
+- **File:** `.agent/workflows/ship.md`
+- **Loại:** `CREATE`
+- **Mô tả:** Pipeline cho lệnh /ship: Document → Push → Deploy.
+
+---
+
 ### [2026-02-25] — MODIFY Config: Added Task Tracking Rule to GEMINI.md
 
 - **File:** `.agent/rules/GEMINI.md`

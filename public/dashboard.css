@@ -254,7 +254,7 @@ body {
 /* ─── Stats ─── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
 }
 
@@ -1288,4 +1288,32 @@ body {
     color: var(--color-success);
     font-size: 16px;
     font-weight: 600;
+}
+
+/* ─── RAG Meta (Debug) ─── */
+.corpus-badge {
+    font-family: monospace;
+    font-size: 11px;
+    background: rgba(255, 153, 0, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--color-primary);
+    border: 1px solid rgba(255, 153, 0, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    display: inline-block;
+}
+
+.corpus-id-stat {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    word-break: break-all;
+    line-height: 1.2;
+    font-family: monospace;
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px;
+    border-radius: 4px;
 }

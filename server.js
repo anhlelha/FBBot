@@ -115,6 +115,7 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
             plan: tenant.plan,
             token_limit: tenant.token_limit,
             tokens_used: tenant.tokens_used,
+            corpus_name: tenant.corpus_name,
         },
         knowledgeBase: stats,
         fbConnected: !!fb?.page_id,

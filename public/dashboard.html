@@ -136,6 +136,10 @@
                         <div class="stat-label">Chunks</div>
                         <div class="stat-value" id="statChunks">—</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-label">RAG Corpus</div>
+                        <div class="stat-value corpus-id-stat" id="statCorpus">ID: —</div>
+                    </div>
                     <div class="stat-card fb">
                         <div class="stat-label">Facebook Page</div>
                         <div class="stat-value" id="statFb">—</div>
@@ -147,7 +151,10 @@
             <!-- Knowledge Base Page -->
             <div id="page-knowledge" class="page">
                 <header class="page-header">
-                    <h1>Knowledge Base</h1>
+                    <div style="display: flex; align-items: baseline; gap: 12px;">
+                        <h1>Knowledge Base</h1>
+                        <span class="corpus-badge" id="corpusBadge" hidden>Corpus ID: —</span>
+                    </div>
                     <p class="page-subtitle">Upload tài liệu để AI học và trả lời chính xác</p>
                 </header>
                 <div class="upload-area" id="uploadArea">

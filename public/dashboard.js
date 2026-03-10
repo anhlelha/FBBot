@@ -15,6 +15,15 @@
             document.getElementById('userPlan').textContent = data.tenant.plan.toUpperCase();
             document.getElementById('userAvatar').textContent = data.tenant.name.charAt(0).toUpperCase();
             document.getElementById('tenantName').textContent = data.tenant.name;
+
+            // Set corpus label if available
+            if (data.tenant.corpus_name) {
+                const badge = document.getElementById('corpusBadge');
+                badge.textContent = `Corpus ID: ${data.tenant.corpus_name.split('/').pop()}`;
+                badge.title = data.tenant.corpus_name;
+                badge.hidden = false;
+            }
+
             loadDashboard();
             loadDocuments();
             loadSettings();
@@ -46,11 +55,20 @@
             document.getElementById('statDocs').textContent = data.knowledgeBase.totalDocuments;
             document.getElementById('statChunks').textContent = data.knowledgeBase.totalChunks;
 
+            if (data.tenant.corpus_name) {
+                const corpusId = data.tenant.corpus_name.split('/').pop();
+                document.getElementById('statCorpus').textContent = corpusId;
+                document.getElementById('statCorpus').title = data.tenant.corpus_name;
+            } else {
+                document.getElementById('statCorpus').textContent = 'Chưa tạo';
+            }
+
             if (data.fbConnected) {
                 document.getElementById('statFb').textContent = '✅ Đã kết nối';
                 document.getElementById('statFbName').textContent = data.fbPageName;
             } else {
                 document.getElementById('statFb').textContent = '❌ Chưa kết nối';
+                document.getElementById('statFbName').textContent = '';
             }
 
             document.getElementById('dashSubtitle').textContent = `${data.tenant.name} — Plan: ${data.tenant.plan}`;
