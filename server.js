@@ -90,6 +90,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
             name: req.tenant.name,
             plan: req.tenant.plan,
             status: req.tenant.status,
+            corpus_name: req.tenant.corpus_name,
         },
         isOwner: isOwner(req.tenant.email),
     });
@@ -106,6 +107,10 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
     const stats = knowledgeBase.getStats(tenant.id);
     const fb = fbConfig.get(tenant.id);
     const tenantSettings = settings.get(tenant.id);
+
+    const fs = require('fs');
+    const logMsg = `[${new Date().toISOString()}] Dashboard hit: ${tenant.email}, corpus: ${tenant.corpus_name}\n`;
+    fs.appendFileSync('DEBUG.LOG', logMsg);
 
     res.json({
         tenant: {
@@ -169,6 +174,40 @@ app.delete('/api/documents/:id', requireAuth, async (req, res) => {
         res.json({ ok: true });
     } catch (error) {
         console.error('❌ Delete error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/documents/:id/view', requireAuth, (req, res) => {
+    try {
+        const doc = documents.getById(req.params.id);
+        if (!doc || doc.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+        const fs = require('fs');
+        if (!fs.existsSync(doc.path)) {
+            return res.status(404).json({ error: 'File not found on disk' });
+        }
+        res.sendFile(doc.path);
+    } catch (error) {
+        console.error('❌ View error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/documents/:id/download', requireAuth, (req, res) => {
+    try {
+        const doc = documents.getById(req.params.id);
+        if (!doc || doc.tenant_id !== req.tenant.id) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+        const fs = require('fs');
+        if (!fs.existsSync(doc.path)) {
+            return res.status(404).json({ error: 'File not found on disk' });
+        }
+        res.download(doc.path, doc.filename);
+    } catch (error) {
+        console.error('❌ Download error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

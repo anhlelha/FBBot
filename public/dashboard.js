@@ -99,6 +99,8 @@
             </div>
           </div>
           <div class="doc-actions">
+            <button class="btn btn-secondary" onclick="previewDoc('${doc.id}')">Xem</button>
+            <button class="btn btn-secondary" onclick="downloadDoc('${doc.id}')">Tải về</button>
             <button class="btn btn-danger" onclick="deleteDoc('${doc.id}')">Xoá</button>
           </div>
         </div>
@@ -108,12 +110,25 @@
         }
     }
 
+    window.previewDoc = function (id) {
+        window.open(`/api/documents/${id}/view`, '_blank');
+    };
+
+    window.downloadDoc = function (id) {
+        window.location.href = `/api/documents/${id}/download`;
+    };
+
     window.deleteDoc = async function (id) {
         if (!confirm('Xoá tài liệu này?')) return;
         try {
-            await fetch('/api/documents/' + id, { method: 'DELETE' });
-            loadDocuments();
-            loadDashboard();
+            const res = await fetch('/api/documents/' + id, { method: 'DELETE' });
+            if (res.ok) {
+                loadDocuments();
+                loadDashboard();
+            } else {
+                const data = await res.json();
+                alert('Lỗi: ' + data.error);
+            }
         } catch (e) {
             alert('Lỗi khi xoá tài liệu');
         }

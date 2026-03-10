@@ -310,6 +310,16 @@ body {
     opacity: 0.9;
 }
 
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-elevated);
+}
+
 .btn-danger {
     background: rgba(248, 81, 73, 0.15);
     color: var(--color-danger);
@@ -1294,16 +1304,17 @@ body {
 .corpus-badge {
     font-family: monospace;
     font-size: 11px;
-    background: rgba(255, 153, 0, 0.08);
-    padding: 2px 8px;
-    border-radius: 4px;
+    background: rgba(255, 153, 0, 0.15);
+    padding: 4px 10px;
+    border-radius: 20px;
     color: var(--color-primary);
-    border: 1px solid rgba(255, 153, 0, 0.2);
+    border: 1px solid var(--color-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 300px;
+    max-width: 400px;
     display: inline-block;
+    font-weight: 600;
 }
 
 .corpus-id-stat {
