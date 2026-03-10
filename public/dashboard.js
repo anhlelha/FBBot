@@ -19,7 +19,9 @@
             // Set corpus label if available
             if (data.tenant.corpus_name) {
                 const badge = document.getElementById('corpusBadge');
-                badge.textContent = `Corpus ID: ${data.tenant.corpus_name.split('/').pop()}`;
+                const corpusId = data.tenant.corpus_name.split('/').pop();
+                const displayName = `corpus-${data.tenant.id}`;
+                badge.textContent = `Corpus: ${displayName} (ID: ${corpusId})`;
                 badge.title = data.tenant.corpus_name;
                 badge.hidden = false;
             }
@@ -57,10 +59,10 @@
 
 
             if (data.fbConnected) {
-                document.getElementById('statFb').textContent = '✅ Đã kết nối';
+                document.getElementById('statFb').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Đã kết nối';
                 document.getElementById('statFbName').textContent = data.fbPageName;
             } else {
-                document.getElementById('statFb').textContent = '❌ Chưa kết nối';
+                document.getElementById('statFb').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>Chưa kết nối';
                 document.getElementById('statFbName').textContent = '';
             }
 
@@ -94,7 +96,7 @@
 
             container.innerHTML = folderList.map(f => `
                 <div class="folder-item" ondblclick="navigateFolder('${f.id}', '${f.name.replace(/'/g, "\\'")}')">
-                    <span class="folder-icon">📁</span>
+                    <span class="folder-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></span>
                     <span class="folder-name">${f.name}</span>
                     <button class="folder-menu-btn" onclick="event.stopPropagation(); folderMenu('${f.id}', '${f.name.replace(/'/g, "\\'")}')" title="Tùy chọn">⋯</button>
                 </div>
@@ -126,9 +128,9 @@
             list.innerHTML = docs.map(doc => `
         <div class="doc-item" data-id="${doc.id}">
           <div class="doc-info">
-            <div class="doc-icon">${doc.type === 'pdf' ? '📄' : '📝'}</div>
+            <div class="doc-icon">${doc.type === 'pdf' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>'}</div>
             <div>
-              <div class="doc-name">${doc.filename}${doc.source === 'gdrive' ? ' <span style="font-size:10px;color:var(--text-muted)">📎 Drive</span>' : ''}</div>
+              <div class="doc-name">${doc.filename}${doc.source === 'gdrive' ? ' <span style="font-size:10px;color:var(--text-muted);display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-20.4 35.3c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.4 9.35z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-10.1-17.5c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 23.8h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>Drive</span>' : ''}</div>
               <div class="doc-meta">${(doc.size / 1024).toFixed(1)} KB</div>
             </div>
           </div>
@@ -146,7 +148,7 @@
 
     function updateBreadcrumb() {
         const bc = document.getElementById('kbBreadcrumb');
-        let html = `<span class="breadcrumb-item${!currentFolderId ? ' active' : ''}" onclick="navigateToRoot()">📁 Tất cả</span>`;
+        let html = `<span class="breadcrumb-item${!currentFolderId ? ' active' : ''}" onclick="navigateToRoot()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Tất cả</span>`;
         for (let i = 0; i < folderPath.length; i++) {
             const isLast = i === folderPath.length - 1;
             html += `<span class="breadcrumb-sep">›</span>`;
@@ -263,7 +265,7 @@
         const uploadStatus = document.getElementById('uploadStatus');
         uploadStatus.hidden = false;
         uploadStatus.className = 'upload-status loading';
-        uploadStatus.textContent = `⏳ Đang import ${fileIds.length} file từ Google Drive: ${fileNames}...`;
+        uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-spin" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="4.93" x2="19.07" y2="7.76"></line></svg>Đang import ${fileIds.length} file từ Google Drive: ${fileNames}...`;
 
         try {
             const res = await fetch('/api/documents/import-gdrive', {
@@ -277,12 +279,12 @@
             const fail = result.imported.filter(r => r.status === 'error').length;
 
             uploadStatus.className = fail > 0 ? 'upload-status' : 'upload-status success';
-            uploadStatus.textContent = `✅ Import hoàn tất: ${ok} thành công${fail > 0 ? `, ${fail} thất bại` : ''}`;
+            uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Import hoàn tất: ${ok} thành công${fail > 0 ? `, ${fail} thất bại` : ''}`;
             loadKnowledgeBase();
             loadDashboard();
         } catch (e) {
             uploadStatus.className = 'upload-status error';
-            uploadStatus.textContent = `❌ Lỗi import: ${e.message}`;
+            uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>Lỗi import: ${e.message}`;
         }
     }
 
@@ -328,7 +330,7 @@
     async function uploadFile(file) {
         uploadStatus.hidden = false;
         uploadStatus.className = 'upload-status loading';
-        uploadStatus.textContent = `⏳ Đang upload và xử lý "${file.name}"...`;
+        uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-spin" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="4.93" x2="19.07" y2="7.76"></line></svg>Đang upload và xử lý "${file.name}"...`;
 
         const formData = new FormData();
         formData.append('file', file);
@@ -339,16 +341,16 @@
 
             if (res.ok) {
                 uploadStatus.className = 'upload-status success';
-                uploadStatus.textContent = `✅ "${data.filename}" — ${data.chunks} chunks đã được tạo`;
+                uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>"${data.filename}" — ${data.chunks} chunks đã được tạo`;
                 loadDocuments();
                 loadDashboard();
             } else {
                 uploadStatus.className = 'upload-status error';
-                uploadStatus.textContent = `❌ Lỗi: ${data.error}`;
+                uploadStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>Lỗi: ${data.error}`;
             }
         } catch (e) {
             uploadStatus.className = 'upload-status error';
-            uploadStatus.textContent = '❌ Lỗi kết nối server';
+            uploadStatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>Lỗi kết nối server';
         }
 
         fileInput.value = '';
@@ -563,7 +565,7 @@
 
             list.innerHTML = convs.map(c => `
                 <div class="conv-item ${c.id === selectedConvId ? 'active' : ''}" data-id="${c.id}">
-                    <div class="conv-avatar">💬</div>
+                    <div class="conv-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
                     <div class="conv-info">
                         <div class="conv-name">
                             <span>${c.sender_name || c.sender_id}</span>
@@ -747,7 +749,7 @@
             document.getElementById('payAccountName').textContent = order.account_name;
             document.getElementById('payAmount').textContent = order.amount.toLocaleString('vi-VN') + '₫';
             document.getElementById('payContent').textContent = order.transfer_content;
-            document.getElementById('payStatus').innerHTML = '<div class="payment-polling">⏳ Đang chờ thanh toán...</div>';
+            document.getElementById('payStatus').innerHTML = '<div class="payment-polling"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-spin" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="4.93" x2="19.07" y2="7.76"></line></svg>Đang chờ thanh toán...</div>';
             document.getElementById('paymentModal').hidden = false;
 
             // Start countdown
@@ -789,7 +791,7 @@
                 if (order.status === 'paid') {
                     clearInterval(paymentPollTimer);
                     clearInterval(countdownTimer);
-                    document.getElementById('payStatus').innerHTML = '<div class="payment-success">🎉 Thanh toán thành công! Plan đã được nâng cấp.</div>';
+                    document.getElementById('payStatus').innerHTML = '<div class="payment-success"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Thanh toán thành công! Plan đã được nâng cấp.</div>';
 
                     // Refresh data
                     setTimeout(() => {
