@@ -61,6 +61,17 @@ class GoogleDriveService {
                 { responseType: 'arraybuffer' }
             );
             buffer = Buffer.from(res.data);
+
+            const extMap = {
+                'application/pdf': '.pdf',
+                'text/plain': '.txt',
+                'text/markdown': '.md',
+                'text/csv': '.csv',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+            };
+            if (extMap[mimeType] && !filename.toLowerCase().endsWith(extMap[mimeType])) {
+                filename += extMap[mimeType];
+            }
         }
 
         return {

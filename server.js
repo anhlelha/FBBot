@@ -312,9 +312,26 @@ app.post('/api/documents/import-gdrive', requireAuth, async (req, res) => {
                     buffer: fileData.buffer,
                     size: fileData.size,
                 };
-                const result = await knowledgeBase.addDocument(
-                    req.tenant.id, fakeFile, corpusName, folder_id || null, 'gdrive'
-                );
+                let result;
+                try {
+                    result = await knowledgeBase.addDocument(
+                        req.tenant.id, fakeFile, corpusName, folder_id || null, 'gdrive'
+                    );
+                } catch (addErr) {
+                    if (addErr.message && addErr.message.includes('NOT_FOUND') && addErr.message.includes('RagCorpus')) {
+                        console.log(`[GDrive] Corpus not found. Recreating corpus for tenant ${req.tenant.id}...`);
+                        corpusName = await vertexRag.createCorpus(`corpus-${req.tenant.id}`);
+                        tenants.update(req.tenant.id, { corpus_name: corpusName });
+                        const instance = tenantManager.getTenantInstance(req.tenant.id);
+                        if (instance) instance.corpusName = corpusName;
+
+                        result = await knowledgeBase.addDocument(
+                            req.tenant.id, fakeFile, corpusName, folder_id || null, 'gdrive'
+                        );
+                    } else {
+                        throw addErr;
+                    }
+                }
                 results.push({ fileId, ...result, status: 'ok' });
             } catch (err) {
                 console.error(`❌ [GDrive] Error importing ${fileId}:`, err.message);
