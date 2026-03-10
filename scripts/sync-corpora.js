@@ -1,5 +1,5 @@
-const vertexRag = require('./src/vertexRag');
-const { tenants } = require('./src/database');
+const vertexRag = require('../src/vertexRag');
+const { tenants } = require('../src/database');
 
 async function sync() {
     console.log('🔍 Fetching all corpora from Vertex AI...');
