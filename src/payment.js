@@ -30,8 +30,8 @@ function createOrder(tenantId, planId) {
     const code = crypto.randomUUID().substring(0, 8).toUpperCase();
     const transferContent = `AI4ALL ORD ${code}`;
 
-    // Expire after 30 minutes
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19);
+    // Expire after 2 hours (120 minutes)
+    const expiresAt = new Date(Date.now() + 120 * 60 * 1000).toISOString();
 
     const order = orders.create(tenantId, planId, amount, transferContent, expiresAt);
 
