@@ -14,6 +14,6 @@
 ║  💳 SePay: sandbox mode             ║
 ╚══════════════════════════════════════════╝
 
-❌ Create order error: Quá nhiều đơn hàng đang chờ. Vui lòng đợi hoặc huỷ đơn cũ.
-❌ Create order error: Quá nhiều đơn hàng đang chờ. Vui lòng đợi hoặc huỷ đơn cũ.
-❌ Create order error: Quá nhiều đơn hàng đang chờ. Vui lòng đợi hoặc huỷ đơn cũ.
+[Order] Cancel request for ORD-5e15e93c. Affected rows: 1
+🧹 Expired 1 old order(s)
+🧹 Expired 2 old order(s)

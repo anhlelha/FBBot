@@ -515,8 +515,9 @@ app.get('/api/plans', async (req, res) => {
 });
 
 app.post('/api/orders/:id/cancel', requireAuth, (req, res) => {
-    orders.cancel(req.params.id, req.tenant.id);
-    res.json({ success: true });
+    const count = orders.cancel(req.params.id, req.tenant.id);
+    console.log(`[Order] Cancel request for ${req.params.id}. Affected rows: ${count}`);
+    res.json({ success: true, affected: count });
 });
 
 app.post('/api/orders', requireAuth, (req, res) => {

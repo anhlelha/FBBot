@@ -135,6 +135,49 @@
             border-color: var(--color-danger);
             color: var(--color-danger);
         }
+
+        /* Revenue bar chart */
+        .rev-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .rev-bar-label {
+            width: 70px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .rev-bar-track {
+            flex: 1;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .rev-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), #e6a817);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            min-width: 60px;
+            transition: width 0.5s ease;
+        }
+        .rev-bar-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .badge-paid { background: rgba(63,185,80,0.15); color: var(--color-success); }
+        .badge-pending { background: rgba(255,153,0,0.15); color: var(--color-primary); }
+        .badge-expired { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+        .badge-cancelled { background: rgba(248,81,73,0.15); color: var(--color-danger); }
     </style>
 </head>
 
@@ -169,6 +212,13 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                     Quản lý Tenants
+                </a>
+                <a href="#" class="nav-item" data-page="revenue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    Doanh thu
                 </a>
                 <div class="nav-group-label">Cấu hình</div>
                 <a href="#" class="nav-item" data-page="whitelist">
@@ -252,6 +302,52 @@
                         </thead>
                         <tbody id="recentTenants"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Revenue -->
+            <div id="page-revenue" class="page">
+                <header class="page-header">
+                    <h1>💰 Doanh thu</h1>
+                    <p class="page-subtitle">Thống kê doanh thu và đơn hàng trên toàn hệ thống</p>
+                </header>
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left: 3px solid var(--color-success)">
+                        <div class="stat-label">Tổng doanh thu</div>
+                        <div class="stat-value" id="revTotal">—</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 3px solid var(--color-info)">
+                        <div class="stat-label">Đơn thành công</div>
+                        <div class="stat-value" id="revCount">—</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 3px solid var(--color-primary)">
+                        <div class="stat-label">Tháng này</div>
+                        <div class="stat-value" id="revThisMonth">—</div>
+                    </div>
+                </div>
+
+                <div class="settings-section" style="margin-top:24px">
+                    <h3>Biểu đồ doanh thu theo tháng</h3>
+                    <div id="revenueChart" style="margin-top:16px"></div>
+                    <p id="revenueChartEmpty" style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có dữ liệu doanh thu</p>
+                </div>
+
+                <div class="settings-section" style="margin-top:24px">
+                    <h3>Tất cả đơn hàng</h3>
+                    <table class="tenant-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Tenant</th>
+                                <th>Plan</th>
+                                <th>Số tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="revenueOrders"></tbody>
+                    </table>
+                    <p id="revenueOrdersEmpty" style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có đơn hàng nào</p>
                 </div>
             </div>
 
@@ -397,11 +493,12 @@
                     const data = await res.json();
                     if (!res.ok || !data.isOwner) { window.location.href = '/'; return; }
                     document.getElementById('ownerEmail').textContent = data.tenant.email;
-                    loadOverview(); // Load stats on init
+                    loadOverview();
                     loadTenants();
                     loadWhitelist();
                     loadPlatformSettings();
                     loadPlans();
+                    loadRevenue();
                 } catch (e) { window.location.href = '/'; }
             }
 
@@ -415,6 +512,7 @@
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                     document.getElementById('page-' + page).classList.add('active');
                     if (page === 'overview') loadOverview();
+                    if (page === 'revenue') loadRevenue();
                 });
             });
 
@@ -432,6 +530,13 @@
                     document.getElementById('oStatActive').textContent = stats.active || 0;
                     document.getElementById('oStatTokens').textContent = (stats.totalTokens || 0).toLocaleString();
                     document.getElementById('oStatWhitelist').textContent = wl.length || 0;
+
+                    // Also load revenue summary into overview
+                    try {
+                        const revRes = await fetch('/api/owner/revenue');
+                        const rev = await revRes.json();
+                        // Update overview stats if elements exist
+                    } catch(re) {}
                 } catch (e) {
                     console.error('Error loading overview:', e);
                 }
@@ -680,6 +785,76 @@
                     }
                 } catch (e) { alert('❌ Lỗi kết nối'); }
             };
+
+            // Revenue
+            async function loadRevenue() {
+                try {
+                    const [revRes, ordRes] = await Promise.all([
+                        fetch('/api/owner/revenue'),
+                        fetch('/api/owner/orders')
+                    ]);
+                    const rev = await revRes.json();
+                    const allOrders = await ordRes.json();
+
+                    // Stats cards
+                    document.getElementById('revTotal').textContent = (rev.total.total || 0).toLocaleString('vi-VN') + '₫';
+                    document.getElementById('revCount').textContent = rev.total.count || 0;
+
+                    const now = new Date();
+                    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                    const thisMonth = rev.monthly.find(m => m.month === thisMonthKey);
+                    document.getElementById('revThisMonth').textContent = thisMonth ? thisMonth.revenue.toLocaleString('vi-VN') + '₫' : '0₫';
+
+                    // Bar chart
+                    const chartEl = document.getElementById('revenueChart');
+                    const emptyChart = document.getElementById('revenueChartEmpty');
+                    if (rev.monthly.length === 0) {
+                        chartEl.innerHTML = '';
+                        emptyChart.style.display = 'block';
+                    } else {
+                        emptyChart.style.display = 'none';
+                        const months = rev.monthly.slice(0, 6).reverse();
+                        const maxRev = Math.max(...months.map(m => m.revenue), 1);
+                        chartEl.innerHTML = months.map(m => {
+                            const pct = Math.max(5, (m.revenue / maxRev) * 100);
+                            const label = m.month.substring(2); // "26-03" format
+                            return `<div class="rev-bar-row">
+                                <div class="rev-bar-label">${label}</div>
+                                <div class="rev-bar-track">
+                                    <div class="rev-bar-fill" style="width:${pct}%">
+                                        <span class="rev-bar-value">${m.revenue.toLocaleString('vi-VN')}₫ (${m.count})</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
+
+                    // Orders table
+                    const tbody = document.getElementById('revenueOrders');
+                    const emptyOrders = document.getElementById('revenueOrdersEmpty');
+                    if (allOrders.length === 0) {
+                        tbody.innerHTML = '';
+                        emptyOrders.style.display = 'block';
+                    } else {
+                        emptyOrders.style.display = 'none';
+                        tbody.innerHTML = allOrders.map(o => `
+                            <tr>
+                                <td><strong>${o.id}</strong></td>
+                                <td>
+                                    <div style="font-size:13px">${o.tenant_email || '—'}</div>
+                                    <div style="font-size:11px;color:var(--text-muted)">${o.tenant_name || ''}</div>
+                                </td>
+                                <td><span class="badge badge-${o.plan}">${o.plan}</span></td>
+                                <td>${o.amount.toLocaleString('vi-VN')}₫</td>
+                                <td><span class="badge badge-${o.status}">${o.status}</span></td>
+                                <td style="color:var(--text-muted);font-size:12px">${new Date(o.created_at + 'Z').toLocaleString('vi-VN')}</td>
+                            </tr>
+                        `).join('');
+                    }
+                } catch (e) {
+                    console.error('Error loading revenue:', e);
+                }
+            }
 
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', async () => {
