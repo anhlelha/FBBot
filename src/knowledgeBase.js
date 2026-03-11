@@ -21,25 +21,34 @@ async function addDocument(tenantId, file, corpusName, folderId = null, source =
     const filePath = path.join(tenantUploadDir, `${Date.now()}-${file.originalname}`);
     fs.writeFileSync(filePath, file.buffer);
 
-    // Upload to Vertex AI RAG Engine
-    console.log(`🚀 [${tenantId}] Uploading to Vertex AI RAG Corpus: ${corpusName}...`);
-    const ragFileResponse = await vertexRag.uploadFile(
-        corpusName,
-        file.buffer,
-        file.originalname,
-        `Document for tenant ${tenantId}`
-    );
+    try {
+        // Upload to Vertex AI RAG Engine
+        console.log(`🚀 [${tenantId}] Uploading to Vertex AI RAG Corpus: ${corpusName}...`);
+        const ragFileResponse = await vertexRag.uploadFile(
+            corpusName,
+            file.buffer,
+            file.originalname,
+            `Document for tenant ${tenantId}`
+        );
 
-    const ragFileName = ragFileResponse.name;
+        const ragFileName = ragFileResponse.name;
 
-    // Save Doc to DB
-    const docId = documents.create(tenantId, file.originalname, filePath, file.size, ext.slice(1), folderId, source);
+        // Save Doc to DB
+        const docId = documents.create(tenantId, file.originalname, filePath, file.size, ext.slice(1), folderId, source);
 
-    // Update DB with rag_file_name
-    documents.updateRagFileName(docId, ragFileName);
+        // Update DB with rag_file_name
+        documents.updateRagFileName(docId, ragFileName);
 
-    console.log(`✅ [${tenantId}] Document added: ${file.originalname} (RAG ID: ${ragFileName}, source: ${source})`);
-    return { id: docId, filename: file.originalname, ragFileName };
+        console.log(`✅ [${tenantId}] Document added: ${file.originalname} (RAG ID: ${ragFileName}, source: ${source})`);
+        return { id: docId, filename: file.originalname, ragFileName };
+    } catch (error) {
+        // If anything fails after saving the file locally, clean up the file
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🧹 Cleaned up local file after upload failure: ${filePath}`);
+        }
+        throw error;
+    }
 }
 
 async function removeDocument(docId) {
