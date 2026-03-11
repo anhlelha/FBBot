@@ -33,7 +33,7 @@ function createOrder(tenantId, planId) {
     // Expire after 30 minutes
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19);
 
-    const order = orders.create(tenantId, plan, amount, transferContent, expiresAt);
+    const order = orders.create(tenantId, planId, amount, transferContent, expiresAt);
 
     return {
         ...order,

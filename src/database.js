@@ -572,6 +572,11 @@ const orders = {
         return result.changes;
     },
 
+    cancel(id, tenantId) {
+        db.prepare(`UPDATE orders SET status = 'cancelled' WHERE id = ? AND tenant_id = ? AND status = 'pending'`)
+            .run(id, tenantId);
+    },
+
     countPendingByTenant(tenantId) {
         return db.prepare(`SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND status = 'pending'`).get(tenantId).count;
     },

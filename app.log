@@ -1,0 +1,16 @@
+
+> hotel-chatbot-fb@1.0.0 start
+> node server.js
+
+💾 SQLite database initialized at /Users/anhlh48/00.AIProjects/01.HotelBot/02.FBBot/data/app.db
+🤖 Gemini AI initialized (gemini-2.5-flash)
+
+╔══════════════════════════════════════════╗
+║       🏨 AI4All Platform Started         ║
+╠══════════════════════════════════════════╣
+║  🌐 http://localhost:3000               ║
+║  👑 Owner: anhle.lha@gmail.com     ║
+║  📡 Webhook: /webhook                    ║
+║  💳 SePay: sandbox mode             ║
+╚══════════════════════════════════════════╝
+

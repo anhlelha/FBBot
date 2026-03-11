@@ -514,6 +514,11 @@ app.get('/api/plans', async (req, res) => {
     }
 });
 
+app.post('/api/orders/:id/cancel', requireAuth, (req, res) => {
+    orders.cancel(req.params.id, req.tenant.id);
+    res.json({ success: true });
+});
+
 app.post('/api/orders', requireAuth, (req, res) => {
     try {
         const { plan } = req.body;
