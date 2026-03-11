@@ -81,24 +81,23 @@ function handleSepayWebhook(body, apiKey) {
         return { status: 'amount_mismatch', expected: order.amount, received: amount };
     }
 
-    // Mark order as paid
-    orders.markPaid(order.id, String(body.id));
-
-    // Get current tenant info for plan transition log
+    // Build params for atomic transaction
     const tenant = tenants.getById(order.tenant_id);
-    const planFrom = tenant.plan;
+    const planFrom = tenant ? tenant.plan : null;
 
-    // Upgrade tenant plan
     const planDetails = plansMgr.getById(order.plan);
     const newTokenLimit = planDetails ? planDetails.token_limit : config.DEFAULT_TRIAL_TOKEN_LIMIT;
 
-    tenants.update(order.tenant_id, {
-        plan: order.plan,
-        token_limit: newTokenLimit,
-    });
-
-    // Log payment history
-    paymentHistory.create(order.tenant_id, order.id, planFrom, order.plan, order.amount);
+    // Execute atomic transaction (update order, token limit, payment history)
+    orders.processSepayWebhook(
+        order.id,
+        String(body.id),
+        order.tenant_id,
+        planFrom,
+        order.plan,
+        order.amount,
+        newTokenLimit
+    );
 
     console.log(`✅ [SePay] Order ${order.id} paid! Tenant ${tenant.email}: ${planFrom} → ${order.plan}`);
 

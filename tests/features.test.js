@@ -282,3 +282,75 @@ describe('Hand-off Detection', () => {
             .toBe('Xin lỗi, tôi không biết.');
     });
 });
+
+
+// ─── Webhook Tests (F02) ───
+describe('SePay Webhook', () => {
+    const payment = require('../src/payment');
+    const { tenants, orders, paymentHistory } = require('../src/database');
+    const config = require('../src/config');
+    let tenantId;
+    let orderId;
+
+    beforeAll(() => {
+        config.SEPAY_API_KEY = 'TEST_KEY';
+        const tenant = tenants.create('webhook@test.com', 'Webhook Hotel');
+        tenantId = tenant.id;
+    });
+
+    beforeEach(() => {
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19);
+        const order = orders.create(tenantId, 'pro', 500000, 'AI4ALL ORD WHKTEST' + Date.now() + Math.random(), expiresAt);
+        orderId = order.id;
+    });
+
+    test('throws error on invalid API key', () => {
+        expect(() => payment.handleSepayWebhook({}, 'Apikey INVALID_KEY')).toThrow('Invalid API key');
+    });
+
+    test('ignores non-incoming transfers', () => {
+        const result = payment.handleSepayWebhook({ transferType: 'out' }, 'Apikey TEST_KEY');
+        expect(result.status).toBe('ignored');
+    });
+
+    test('returns no_match for invalid content', () => {
+        const result = payment.handleSepayWebhook({ transferType: 'in', content: 'INVALID CONTENT' }, 'Apikey TEST_KEY');
+        expect(result.status).toBe('no_match');
+    });
+
+    test('returns amount_mismatch for insufficient amount', () => {
+        const order = orders.getById(orderId);
+        const result = payment.handleSepayWebhook({
+            transferType: 'in',
+            content: order.transfer_content,
+            transferAmount: 100000, // < 500000
+        }, 'Apikey TEST_KEY');
+        expect(result.status).toBe('amount_mismatch');
+    });
+
+    test('processes valid payment successfully with transaction', () => {
+        const order = orders.getById(orderId);
+        const result = payment.handleSepayWebhook({
+            transferType: 'in',
+            content: order.transfer_content,
+            transferAmount: 500000,
+            id: 12345
+        }, 'Apikey TEST_KEY');
+
+        expect(result.status).toBe('success');
+        expect(result.orderId).toBe(orderId);
+
+        // Verify order status
+        const updatedOrder = orders.getById(orderId);
+        expect(updatedOrder.status).toBe('paid');
+
+        // Verify tenant upgraded
+        const tenant = tenants.getById(tenantId);
+        expect(tenant.plan).toBe('pro');
+
+        // Verify payment history
+        const history = paymentHistory.getByTenant(tenantId);
+        expect(history.length).toBeGreaterThan(0);
+        expect(history[0].order_id).toBe(orderId);
+    });
+});

@@ -553,6 +553,20 @@ const orders = {
             .run(sepayTransactionId, id);
     },
 
+    processSepayWebhook: db.transaction((orderId, sepayTransactionId, tenantId, planFrom, planTo, amount, newTokenLimit) => {
+        // 1. Mark order paid
+        db.prepare(`UPDATE orders SET status = 'paid', paid_at = datetime('now'), sepay_transaction_id = ? WHERE id = ?`)
+            .run(sepayTransactionId, orderId);
+
+        // 2. Upgrade tenant plan
+        db.prepare(`UPDATE tenants SET plan = ?, token_limit = ? WHERE id = ?`)
+            .run(planTo, newTokenLimit, tenantId);
+
+        // 3. Create payment history
+        db.prepare(`INSERT INTO payment_history (tenant_id, order_id, plan_from, plan_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`)
+            .run(tenantId, orderId, planFrom, planTo, amount);
+    }),
+
     expireOld() {
         const result = db.prepare(`UPDATE orders SET status = 'expired' WHERE status = 'pending' AND expires_at < datetime('now')`).run();
         return result.changes;

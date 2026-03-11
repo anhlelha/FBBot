@@ -1,3 +1,8 @@
+
+### [2026-03-11] — MODIFY Project Config: Payment Webhook Transaction Patch
+- **File:** `src/database.js` & `src/payment.js`
+- **Loại:** MODIFY
+- **Mô tả:** Wrapped SePay webhook handler database operations in single SQLite transaction to prevent race conditions & inconsistent states.
 # Agent Changelog
 
 > Lịch sử thay đổi tất cả Skills, Workflows, và cấu hình Agent.
