@@ -274,40 +274,4 @@ describe('Documents', () => {
     });
 });
 
-// ─── VectorStore Class Tests ───
-describe('VectorStore', () => {
-    const VectorStore = require('../src/vectorStore');
-
-    test('creates independent instances', () => {
-        const vs1 = new VectorStore();
-        const vs2 = new VectorStore();
-        vs1.addChunks('doc1', ['hello'], [[1, 0, 0]]);
-        expect(vs1.size).toBe(1);
-        expect(vs2.size).toBe(0);
-    });
-
-    test('search returns ranked results', () => {
-        const vs = new VectorStore();
-        vs.addChunks('doc1', ['about rooms', 'about pricing'], [[1, 0, 0], [0, 1, 0]]);
-        const results = vs.search([1, 0, 0], 1);
-        expect(results.length).toBe(1);
-        expect(results[0].text).toBe('about rooms');
-    });
-
-    test('removeDocument', () => {
-        const vs = new VectorStore();
-        vs.addChunks('doc1', ['chunk1'], [[1, 0]]);
-        vs.addChunks('doc2', ['chunk2'], [[0, 1]]);
-        expect(vs.size).toBe(2);
-        vs.removeDocument('doc1');
-        expect(vs.size).toBe(1);
-        expect(vs.entries[0].docId).toBe('doc2');
-    });
-
-    test('clear empties all', () => {
-        const vs = new VectorStore();
-        vs.addChunks('doc1', ['a', 'b', 'c'], [[1, 0], [0, 1], [1, 1]]);
-        vs.clear();
-        expect(vs.size).toBe(0);
-    });
-});
+// VectorStore tests removed as the module is no longer used in the project.

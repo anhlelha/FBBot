@@ -131,11 +131,17 @@
                         <div class="stat-extra" id="statTokenLimit"></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Tài liệu</div>
-                        <div class="stat-value" id="statDocs">—</div>
+                        <div class="stat-label">Số Requests (Tháng)</div>
+                        <div class="stat-value" id="statRequests">—</div>
+                        <div class="stat-extra" id="statRequestLimit"></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Chunks</div>
+                        <div class="stat-label">Tài liệu Knowledge</div>
+                        <div class="stat-value" id="statDocs">—</div>
+                        <div class="stat-extra" id="statDocLimit"></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Số Chunks</div>
                         <div class="stat-value" id="statChunks">—</div>
                     </div>
                     <div class="stat-card fb">
@@ -327,7 +333,8 @@
                             <div class="payment-polling">⏳ Đang chờ thanh toán...</div>
                         </div>
                     </div>
-                    <div class="modal-footer" style="padding: 16px; display: flex; gap: 12px; border-top: 1px solid var(--border-color);">
+                    <div class="modal-footer"
+                        style="padding: 16px; display: flex; gap: 12px; border-top: 1px solid var(--border-color);">
                         <button class="btn btn-primary" id="btnPaidCheck" style="flex: 1;">⚡ Tôi đã thanh toán</button>
                         <button class="btn btn-secondary" id="btnCancelOrder" style="flex: 1;">✕ Huỷ đơn</button>
                     </div>

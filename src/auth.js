@@ -48,7 +48,11 @@ function requireAuth(req, res, next) {
         req.session = null;
         return res.status(401).json({ error: 'Unauthorized' });
     }
-    req.tenant = tenant;
+
+    // Check and reset usage if it's a new month
+    tenants.checkAndResetUsage(tenant.id);
+    req.tenant = tenants.getById(tenant.id); // Refresh tenant data after potential reset
+
     next();
 }
 
@@ -61,7 +65,11 @@ function requireOwner(req, res, next) {
     if (!tenant || !isOwner(tenant.email)) {
         return res.status(403).json({ error: 'Forbidden: Owner access required' });
     }
-    req.tenant = tenant;
+
+    // Check and reset usage
+    tenants.checkAndResetUsage(tenant.id);
+    req.tenant = tenants.getById(tenant.id);
+
     next();
 }
 
@@ -74,7 +82,11 @@ function requireOwnerRedirect(req, res, next) {
     if (!tenant || !isOwner(tenant.email)) {
         return res.redirect('/');
     }
-    req.tenant = tenant;
+
+    // Check and reset usage
+    tenants.checkAndResetUsage(tenant.id);
+    req.tenant = tenants.getById(tenant.id);
+
     next();
 }
 

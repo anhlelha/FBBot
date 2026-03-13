@@ -7,8 +7,10 @@ async function getPlans() {
     return plans.map(p => ({
         ...p,
         features: p.features ? JSON.parse(p.features) : [],
-        // Backward compatibility for old UI keys if needed
-        doc_limit: p.id === 'pro' ? -1 : (p.id === 'basic' ? 10 : 3),
+        // Limit display
+        token_limit: p.token_limit,
+        request_limit: p.request_limit,
+        doc_limit: p.doc_limit,
         description: p.id === 'pro' ? 'Dành cho KS lớn' : (p.id === 'basic' ? 'Gói phổ biến cho KS nhỏ' : 'Gói tùy chỉnh')
     }));
 }
@@ -87,8 +89,10 @@ function handleSepayWebhook(body, apiKey) {
 
     const planDetails = plansMgr.getById(order.plan);
     const newTokenLimit = planDetails ? planDetails.token_limit : config.DEFAULT_TRIAL_TOKEN_LIMIT;
+    const newRequestLimit = planDetails ? planDetails.request_limit : 1000;
+    const newDocLimit = planDetails ? planDetails.doc_limit : 10;
 
-    // Execute atomic transaction (update order, token limit, payment history)
+    // Execute atomic transaction (update order, limits, payment history)
     orders.processSepayWebhook(
         order.id,
         String(body.id),
@@ -96,7 +100,11 @@ function handleSepayWebhook(body, apiKey) {
         planFrom,
         order.plan,
         order.amount,
-        newTokenLimit
+        {
+            token_limit: newTokenLimit,
+            request_limit: newRequestLimit,
+            doc_limit: newDocLimit
+        }
     );
 
     console.log(`✅ [SePay] Order ${order.id} paid! Tenant ${tenant.email}: ${planFrom} → ${order.plan}`);

@@ -110,10 +110,6 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
     const fb = fbConfig.get(tenant.id);
     const tenantSettings = settings.get(tenant.id);
 
-    const fs = require('fs');
-    const logMsg = `[${new Date().toISOString()}] Dashboard hit: ${tenant.email}, corpus: ${tenant.corpus_name}\n`;
-    fs.appendFileSync('DEBUG.LOG', logMsg);
-
     res.json({
         tenant: {
             id: tenant.id,
@@ -122,6 +118,9 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
             plan: tenant.plan,
             token_limit: tenant.token_limit,
             tokens_used: tenant.tokens_used,
+            request_limit: tenant.request_limit,
+            requests_used: tenant.requests_used,
+            doc_limit: tenant.doc_limit,
             corpus_name: tenant.corpus_name,
         },
         knowledgeBase: stats,
@@ -148,6 +147,12 @@ app.get('/api/documents', requireAuth, (req, res) => {
 app.post('/api/documents', requireAuth, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+        // Check document limit
+        const stats = knowledgeBase.getStats(req.tenant.id);
+        if (req.tenant.doc_limit > 0 && stats.totalDocuments >= req.tenant.doc_limit) {
+            return res.status(403).json({ error: `Bạn đã đạt giới hạn tài liệu (${req.tenant.doc_limit}). Vui lòng nâng cấp gói cước.` });
+        }
 
         const instance = tenantManager.getTenantInstance(req.tenant.id);
 
@@ -351,7 +356,19 @@ app.post('/api/chat', requireAuth, async (req, res) => {
         const { message } = req.body;
         if (!message) return res.status(400).json({ error: 'Missing message' });
 
+        // Check limits
+        if (req.tenant.request_limit > 0 && req.tenant.requests_used >= req.tenant.request_limit) {
+            return res.status(403).json({ error: 'Bạn đã hết lượt request trong tháng này. Vui lòng nâng cấp gói cước.' });
+        }
+        if (req.tenant.token_limit > 0 && req.tenant.tokens_used >= req.tenant.token_limit) {
+            return res.status(403).json({ error: 'Bạn đã hết hạn mức Token. Vui lòng nâng cấp gói cước.' });
+        }
+
         const reply = await tenantManager.generateResponseForTenant(req.tenant.id, message);
+
+        // Increment requests
+        tenants.incrementRequests(req.tenant.id);
+
         res.json({ reply });
     } catch (error) {
         console.error('❌ Chat error:', error.message);
@@ -586,8 +603,8 @@ app.get('/api/owner/tenants', requireOwner, (req, res) => {
 });
 
 app.put('/api/owner/tenants/:id', requireOwner, (req, res) => {
-    const { status, plan, token_limit } = req.body;
-    tenants.update(req.params.id, { status, plan, token_limit });
+    const { status, plan, token_limit, request_limit, doc_limit } = req.body;
+    tenants.update(req.params.id, { status, plan, token_limit, request_limit, doc_limit });
     res.json({ ok: true });
 });
 
@@ -650,10 +667,10 @@ app.get('/api/owner/plans', requireOwner, (req, res) => {
 
 app.post('/api/owner/plans', requireOwner, (req, res) => {
     try {
-        const { id, name, price, token_limit, features, is_active } = req.body;
+        const { id, name, price, token_limit, request_limit, doc_limit, features, is_active } = req.body;
         if (!id || !name || price === undefined) return res.status(400).json({ error: 'Missing required fields' });
 
-        const plan = plansMgr.create(id, name, price, token_limit, JSON.stringify(features), is_active);
+        const plan = plansMgr.create(id, name, price, token_limit, request_limit, doc_limit, JSON.stringify(features), is_active);
         res.json(plan);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -662,8 +679,8 @@ app.post('/api/owner/plans', requireOwner, (req, res) => {
 
 app.put('/api/owner/plans/:id', requireOwner, (req, res) => {
     try {
-        const { name, price, token_limit, features, is_active } = req.body;
-        const updateData = { name, price, token_limit, is_active };
+        const { name, price, token_limit, request_limit, doc_limit, features, is_active } = req.body;
+        const updateData = { name, price, token_limit, request_limit, doc_limit, is_active };
         if (features) updateData.features = JSON.stringify(features);
 
         const plan = plansMgr.update(req.params.id, updateData);

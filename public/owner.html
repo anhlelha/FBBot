@@ -434,6 +434,8 @@
                                 <th>Tên Hiển Thị</th>
                                 <th>Giá (VND)</th>
                                 <th>Hạn mức Tokens</th>
+                                <th>Hạn mức Requests</th>
+                                <th>Giới hạn Docs</th>
                                 <th>Tính năng</th>
                                 <th>Trạng thái</th>
                                 <th>Actions</th>
@@ -463,6 +465,14 @@
                         <div>
                             <label class="form-label">Hạn mức Token</label>
                             <input type="number" id="pTokens" class="form-input" placeholder="Ví dụ: 100000">
+                        </div>
+                        <div>
+                            <label class="form-label">Hạn mức Request / Tháng</label>
+                            <input type="number" id="pRequests" class="form-input" placeholder="Ví dụ: 1000">
+                        </div>
+                        <div>
+                            <label class="form-label">Giới hạn Documents</label>
+                            <input type="number" id="pDocs" class="form-input" placeholder="Ví dụ: 50">
                         </div>
                     </div>
                     <div style="margin-top: 16px;">
@@ -678,6 +688,8 @@
                             <td>${p.name}</td>
                             <td>${Number(p.price).toLocaleString()}đ</td>
                             <td>${Number(p.token_limit).toLocaleString()}</td>
+                            <td>${Number(p.request_limit || 0).toLocaleString()}</td>
+                            <td>${p.doc_limit === -1 ? 'Unlimited' : (p.doc_limit || 0)}</td>
                             <td><div style="font-size: 11px; color: var(--text-muted)">${features.join(', ')}</div></td>
                             <td><span class="badge ${p.is_active ? 'badge-active' : 'badge-suspended'}">${p.is_active ? 'Active' : 'Hidden'}</span></td>
                             <td>
@@ -704,6 +716,8 @@
                 document.getElementById('pName').value = '';
                 document.getElementById('pPrice').value = '';
                 document.getElementById('pTokens').value = '';
+                document.getElementById('pRequests').value = '';
+                document.getElementById('pDocs').value = '';
                 document.getElementById('pFeatures').value = '';
                 document.getElementById('pActive').checked = true;
                 document.getElementById('planForm').style.display = 'block';
@@ -727,6 +741,8 @@
                 document.getElementById('pName').value = p.name;
                 document.getElementById('pPrice').value = p.price;
                 document.getElementById('pTokens').value = p.token_limit;
+                document.getElementById('pRequests').value = p.request_limit || 0;
+                document.getElementById('pDocs').value = p.doc_limit || 0;
 
                 const features = p.features ? JSON.parse(p.features) : [];
                 document.getElementById('pFeatures').value = features.join('\n');
@@ -741,6 +757,8 @@
                 const name = document.getElementById('pName').value.trim();
                 const price = parseInt(document.getElementById('pPrice').value);
                 const token_limit = parseInt(document.getElementById('pTokens').value);
+                const request_limit = parseInt(document.getElementById('pRequests').value) || 0;
+                const doc_limit = parseInt(document.getElementById('pDocs').value) || 0;
                 const features = document.getElementById('pFeatures').value.split('\n').map(s => s.trim()).filter(s => s);
                 const is_active = document.getElementById('pActive').checked ? 1 : 0;
 
@@ -755,7 +773,7 @@
                     const res = await fetch(url, {
                         method,
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id, name, price, token_limit, features, is_active })
+                        body: JSON.stringify({ id, name, price, token_limit, request_limit, doc_limit, features, is_active })
                     });
 
                     const data = await res.json().catch(() => ({ error: 'Không thể giải mã phản hồi từ hệ thống' }));

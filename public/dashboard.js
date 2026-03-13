@@ -54,7 +54,12 @@
 
             document.getElementById('statTokens').textContent = data.tenant.tokens_used.toLocaleString();
             document.getElementById('statTokenLimit').textContent = `/ ${data.tenant.token_limit.toLocaleString()} limit`;
+
+            document.getElementById('statRequests').textContent = data.tenant.requests_used.toLocaleString();
+            document.getElementById('statRequestLimit').textContent = `/ ${data.tenant.request_limit.toLocaleString()} limit`;
+
             document.getElementById('statDocs').textContent = data.knowledgeBase.totalDocuments;
+            document.getElementById('statDocLimit').textContent = data.tenant.doc_limit === -1 ? '/ Unlimited' : `/ ${data.tenant.doc_limit} limit`;
             document.getElementById('statChunks').textContent = data.knowledgeBase.totalChunks;
 
 
@@ -737,7 +742,7 @@
 
             if (!res.ok) {
                 // If too many orders, load them so user can cancel/pay
-                loadOrders(); 
+                loadOrders();
                 alert('❌ ' + order.error);
                 return;
             }
@@ -749,9 +754,9 @@
         }
     };
 
-    window.showPaymentModal = function(order) {
+    window.showPaymentModal = function (order) {
         currentOrderId = order.id;
-        
+
         // Show payment modal
         document.getElementById('paymentQR').src = order.qr_url || `https://api.vietqr.io/image/${order.bank_name || 'MB'}-${order.bank_account || '0123456789'}-compact2.jpg?amount=${order.amount}&addInfo=${encodeURIComponent(order.transfer_content)}&accountName=${encodeURIComponent(order.account_name || 'AI4ALL')}`;
         document.getElementById('payBankName').textContent = order.bank_name || 'MBBank';
@@ -760,11 +765,11 @@
         document.getElementById('payAmount').textContent = order.amount.toLocaleString('vi-VN') + '₫';
         document.getElementById('payContent').textContent = order.transfer_content;
         document.getElementById('payStatus').innerHTML = '<div class="payment-polling"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-spin" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="4.93" x2="19.07" y2="7.76"></line></svg>Đang chờ thanh toán...</div>';
-        
+
         const isExpired = new Date(order.expires_at) < new Date();
         document.getElementById('btnPaidCheck').disabled = isExpired;
         document.getElementById('btnPaidCheck').style.opacity = isExpired ? '0.5' : '1';
-        
+
         document.getElementById('paymentModal').hidden = false;
 
         // Start countdown
@@ -899,7 +904,7 @@
                     item.title = 'Bấm để thanh toán hoặc huỷ';
                     item.onclick = () => showPaymentModal(o);
                 }
-                
+
                 item.innerHTML = `
                     <div>
                         <strong>${o.id}</strong> — ${o.plan.toUpperCase()}

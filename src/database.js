@@ -24,6 +24,10 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'active',
     token_limit INTEGER NOT NULL DEFAULT ${config.DEFAULT_TRIAL_TOKEN_LIMIT},
     tokens_used INTEGER NOT NULL DEFAULT 0,
+    request_limit INTEGER NOT NULL DEFAULT 1000, -- Default limit
+    requests_used INTEGER NOT NULL DEFAULT 0,
+    doc_limit INTEGER NOT NULL DEFAULT 10,       -- Default limit
+    usage_reset_at TEXT,                         -- ISO date
     corpus_name TEXT, -- Vertex AI RAG Corpus Name
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -162,6 +166,8 @@ db.exec(`
     name TEXT NOT NULL,
     price INTEGER NOT NULL,
     token_limit INTEGER NOT NULL,
+    request_limit INTEGER NOT NULL DEFAULT 0,
+    doc_limit INTEGER NOT NULL DEFAULT 0,
     features TEXT,
     is_active INTEGER DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -183,6 +189,14 @@ try { db.exec("ALTER TABLE documents ADD COLUMN rag_file_name TEXT;"); } catch (
 try { db.exec("ALTER TABLE documents ADD COLUMN folder_id TEXT;"); } catch (e) { }
 try { db.exec("ALTER TABLE documents ADD COLUMN source TEXT NOT NULL DEFAULT 'upload';"); } catch (e) { }
 
+// F06 Improvement: Additional limits & Reset
+try { db.exec("ALTER TABLE plans ADD COLUMN request_limit INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
+try { db.exec("ALTER TABLE plans ADD COLUMN doc_limit INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
+try { db.exec("ALTER TABLE tenants ADD COLUMN request_limit INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
+try { db.exec("ALTER TABLE tenants ADD COLUMN requests_used INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
+try { db.exec("ALTER TABLE tenants ADD COLUMN doc_limit INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
+try { db.exec("ALTER TABLE tenants ADD COLUMN usage_reset_at TEXT;"); } catch (e) { }
+
 function generateId() {
     return crypto.randomUUID();
 }
@@ -194,9 +208,16 @@ const tenants = {
         const isWhitelisted = whitelist.isWhitelisted(email);
         const plan = isWhitelisted ? 'whitelist' : 'trial';
         const tokenLimit = isWhitelisted ? 999999999 : config.DEFAULT_TRIAL_TOKEN_LIMIT;
+        const requestLimit = isWhitelisted ? 999999999 : 1000;
+        const docLimit = isWhitelisted ? 999999999 : 10;
 
-        db.prepare(`INSERT INTO tenants (id, email, name, plan, token_limit) VALUES (?, ?, ?, ?, ?)`)
-            .run(id, email, name, plan, tokenLimit);
+        // Set reset date to 1 month from now
+        const resetDate = new Date();
+        resetDate.setMonth(resetDate.getMonth() + 1);
+        const usageResetAt = resetDate.toISOString();
+
+        db.prepare(`INSERT INTO tenants (id, email, name, plan, token_limit, request_limit, doc_limit, usage_reset_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+            .run(id, email, name, plan, tokenLimit, requestLimit, docLimit, usageResetAt);
 
         db.prepare(`INSERT INTO tenant_settings (tenant_id) VALUES (?)`)
             .run(id);
@@ -217,7 +238,7 @@ const tenants = {
     },
 
     update(id, fields) {
-        const allowed = ['name', 'plan', 'status', 'token_limit', 'tokens_used', 'corpus_name'];
+        const allowed = ['name', 'plan', 'status', 'token_limit', 'tokens_used', 'request_limit', 'requests_used', 'doc_limit', 'usage_reset_at', 'corpus_name'];
         const sets = [];
         const values = [];
         for (const [key, val] of Object.entries(fields)) {
@@ -233,6 +254,36 @@ const tenants = {
 
     incrementTokens(id, count) {
         db.prepare(`UPDATE tenants SET tokens_used = tokens_used + ? WHERE id = ?`).run(count, id);
+    },
+
+    incrementRequests(id, count = 1) {
+        db.prepare(`UPDATE tenants SET requests_used = requests_used + ? WHERE id = ?`).run(count, id);
+    },
+
+    checkAndResetUsage(id) {
+        const tenant = this.getById(id);
+        if (!tenant || !tenant.usage_reset_at) return;
+
+        const now = new Date();
+        const resetAt = new Date(tenant.usage_reset_at);
+
+        if (now >= resetAt) {
+            console.log(`♻️ Resetting usage for tenant: ${tenant.email}`);
+            // Calculate next reset date
+            const nextReset = new Date(resetAt);
+            nextReset.setMonth(nextReset.getMonth() + 1);
+
+            // If we are far behind, keep moving forward until we are in the future
+            while (nextReset <= now) {
+                nextReset.setMonth(nextReset.getMonth() + 1);
+            }
+
+            this.update(id, {
+                tokens_used: 0,
+                requests_used: 0,
+                usage_reset_at: nextReset.toISOString()
+            });
+        }
     },
 
     getStats() {
@@ -553,14 +604,18 @@ const orders = {
             .run(sepayTransactionId, id);
     },
 
-    processSepayWebhook: db.transaction((orderId, sepayTransactionId, tenantId, planFrom, planTo, amount, newTokenLimit) => {
+    processSepayWebhook: db.transaction((orderId, sepayTransactionId, tenantId, planFrom, planTo, amount, limits) => {
         // 1. Mark order paid
         db.prepare(`UPDATE orders SET status = 'paid', paid_at = datetime('now'), sepay_transaction_id = ? WHERE id = ?`)
             .run(sepayTransactionId, orderId);
 
-        // 2. Upgrade tenant plan
-        db.prepare(`UPDATE tenants SET plan = ?, token_limit = ? WHERE id = ?`)
-            .run(planTo, newTokenLimit, tenantId);
+        // 2. Upgrade tenant plan & limits
+        const tokenLimit = typeof limits === 'object' ? limits.token_limit : limits;
+        const requestLimit = typeof limits === 'object' ? limits.request_limit : 1000;
+        const docLimit = typeof limits === 'object' ? limits.doc_limit : 10;
+
+        db.prepare(`UPDATE tenants SET plan = ?, token_limit = ?, request_limit = ?, doc_limit = ? WHERE id = ?`)
+            .run(planTo, tokenLimit, requestLimit, docLimit, tenantId);
 
         // 3. Create payment history
         db.prepare(`INSERT INTO payment_history (tenant_id, order_id, plan_from, plan_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`)
@@ -633,9 +688,9 @@ const platformSettings = {
 
 // ─── Plans (F06) ───
 const plansMgr = {
-    create(id, name, price, tokenLimit, featuresStr, isActive = 1) {
-        db.prepare(`INSERT INTO plans (id, name, price, token_limit, features, is_active) VALUES (?, ?, ?, ?, ?, ?)`)
-            .run(id, name, price, tokenLimit, featuresStr || null, isActive);
+    create(id, name, price, tokenLimit, requestLimit, docLimit, featuresStr, isActive = 1) {
+        db.prepare(`INSERT INTO plans (id, name, price, token_limit, request_limit, doc_limit, features, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+            .run(id, name, price, tokenLimit, requestLimit || 0, docLimit || 0, featuresStr || null, isActive);
         return this.getById(id);
     },
 
@@ -652,7 +707,7 @@ const plansMgr = {
     },
 
     update(id, fields) {
-        const allowed = ['name', 'price', 'token_limit', 'features', 'is_active'];
+        const allowed = ['name', 'price', 'token_limit', 'request_limit', 'doc_limit', 'features', 'is_active'];
         const sets = [];
         const values = [];
         for (const [key, val] of Object.entries(fields)) {
@@ -720,8 +775,8 @@ if (existingPlans.length === 0) {
         'Remove Watermark'
     ]);
 
-    plansMgr.create('basic', 'Basic Plan', basicPrice, basicTokens, basicFtrs, 1);
-    plansMgr.create('pro', 'Pro Plan', proPrice, proTokens, proFtrs, 1);
+    plansMgr.create('basic', 'Basic Plan', basicPrice, basicTokens, 1000, 10, basicFtrs, 1);
+    plansMgr.create('pro', 'Pro Plan', proPrice, proTokens, 10000, -1, proFtrs, 1);
 }
 
 // Seed owner email into whitelist if not exists
@@ -732,7 +787,12 @@ const adminEmail = config.OWNER_EMAIL;
 let adminTenant = tenants.getByEmail(adminEmail);
 if (!adminTenant) {
     adminTenant = tenants.create(adminEmail, 'AI Solution Platform');
-    tenants.update(adminTenant.id, { plan: 'pro', token_limit: 999999999 });
+    tenants.update(adminTenant.id, {
+        plan: 'pro',
+        token_limit: 999999999,
+        request_limit: 999999999,
+        doc_limit: 999999999
+    });
 
     fbConfig.upsert(adminTenant.id, {
         page_id: 'AI_SOLUTION_PAGE_ID',
