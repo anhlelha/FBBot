@@ -832,12 +832,12 @@ function seedPlans() {
         plansMgr.create('vip', 'VIP Plan', 0, 999999999, 999999999, 999999999, vipFtrs, 1);
     }
 
-    // Migration: Update existing whitelisted tenants and emails to VIP
-    const needsMigration = db.prepare(`SELECT COUNT(*) as count FROM tenants WHERE plan = 'whitelist'`).get().count > 0;
-    if (needsMigration) {
-        console.log('🔄 Migrating whitelist types to VIP plan...');
-        db.prepare(`UPDATE tenants SET plan = 'vip' WHERE plan = 'whitelist'`).run();
-        db.prepare(`UPDATE whitelist_emails SET plan = 'vip' WHERE plan IS NULL OR plan = '' OR plan = 'whitelist'`).run();
+    // One-time migration: Sync all tenant limits from their current plans to fix 0/0 stats
+    console.log('🔄 Syncing all tenant limits from plan definitions...');
+    const allPlans = plansMgr.getAll();
+    for (const p of allPlans) {
+        db.prepare(`UPDATE tenants SET token_limit = ?, request_limit = ?, doc_limit = ? WHERE plan = ?`)
+            .run(p.token_limit, p.request_limit, p.doc_limit, p.id);
     }
 }
 seedPlans();
