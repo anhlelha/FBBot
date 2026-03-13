@@ -624,6 +624,7 @@ app.post('/api/owner/whitelist/sync', requireOwner, (req, res) => {
             if (tenant && tenant.plan !== entry.plan) {
                 const planDetails = allPlans.find(p => p.id === entry.plan);
                 if (planDetails) {
+                    console.log(`🔄 [Whitelist Sync] Syncing tenant ${entry.email} to plan ${entry.plan}. Limits: T=${planDetails.token_limit}, R=${planDetails.request_limit}, D=${planDetails.doc_limit}`);
                     tenants.update(tenant.id, {
                         plan: entry.plan,
                         token_limit: planDetails.token_limit,
@@ -703,6 +704,7 @@ app.put('/api/owner/plans/:id', requireOwner, (req, res) => {
         const plan = plansMgr.update(req.params.id, updateData);
 
         // Propagate changes to all tenants on this plan
+        console.log(`📣 [Plan Update] Propagating limits for plan ${req.params.id} to all tenants.`);
         tenants.syncByPlan(req.params.id, {
             token_limit: token_limit !== undefined ? token_limit : plan.token_limit,
             request_limit: request_limit !== undefined ? request_limit : plan.request_limit,

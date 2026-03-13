@@ -263,6 +263,7 @@ const tenants = {
 
     syncByPlan(planId, limits) {
         const { token_limit, request_limit, doc_limit } = limits;
+        console.log(`📡 [syncByPlan] Updating tenants with plan ${planId} -> T:${token_limit}, R:${request_limit}, D:${doc_limit}`);
         db.prepare(`UPDATE tenants SET token_limit = ?, request_limit = ?, doc_limit = ? WHERE plan = ?`)
             .run(token_limit, request_limit, doc_limit, planId);
     },
