@@ -317,6 +317,8 @@
                                 <th>Tên</th>
                                 <th>Plan</th>
                                 <th>Tokens</th>
+                                <th>Requests</th>
+                                <th>Docs</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -389,6 +391,8 @@
                                 <th>Tên</th>
                                 <th>Plan</th>
                                 <th>Tokens</th>
+                                <th>Requests</th>
+                                <th>Docs</th>
                                 <th>Status</th>
                                 <th>FB Page</th>
                                 <th>Actions</th>
@@ -591,7 +595,9 @@
           <td>${t.email}</td>
           <td>${t.name}</td>
           <td><span class="badge badge-${t.plan}">${t.plan}</span></td>
-          <td>${t.tokens_used.toLocaleString()} / ${t.token_limit.toLocaleString()}</td>
+          <td>${(t.tokens_used || 0).toLocaleString()} / ${(t.token_limit || 0).toLocaleString()}</td>
+          <td>${(t.requests_used || 0).toLocaleString()} / ${(t.request_limit || 0).toLocaleString()}</td>
+          <td>${(t.documentsCount || 0).toLocaleString()} / ${(t.doc_limit || 0).toLocaleString()}</td>
           <td><span class="badge badge-${t.status}">${t.status}</span></td>
           ${showActions ? `
             <td>
