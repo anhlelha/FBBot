@@ -261,6 +261,12 @@ const tenants = {
         db.prepare(`UPDATE tenants SET ${sets.join(', ')} WHERE id = ?`).run(...values);
     },
 
+    syncByPlan(planId, limits) {
+        const { token_limit, request_limit, doc_limit } = limits;
+        db.prepare(`UPDATE tenants SET token_limit = ?, request_limit = ?, doc_limit = ? WHERE plan = ?`)
+            .run(token_limit, request_limit, doc_limit, planId);
+    },
+
     incrementTokens(id, count) {
         db.prepare(`UPDATE tenants SET tokens_used = tokens_used + ? WHERE id = ?`).run(count, id);
     },

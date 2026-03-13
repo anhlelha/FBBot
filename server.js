@@ -701,6 +701,14 @@ app.put('/api/owner/plans/:id', requireOwner, (req, res) => {
         if (features) updateData.features = JSON.stringify(features);
 
         const plan = plansMgr.update(req.params.id, updateData);
+
+        // Propagate changes to all tenants on this plan
+        tenants.syncByPlan(req.params.id, {
+            token_limit: token_limit !== undefined ? token_limit : plan.token_limit,
+            request_limit: request_limit !== undefined ? request_limit : plan.request_limit,
+            doc_limit: doc_limit !== undefined ? doc_limit : plan.doc_limit
+        });
+
         res.json(plan);
     } catch (error) {
         res.status(500).json({ error: error.message });
