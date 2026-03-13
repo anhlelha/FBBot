@@ -609,29 +609,33 @@ app.post('/api/owner/whitelist', requireOwner, (req, res) => {
     res.json({ ok: true });
 });
 
-app.put('/api/owner/whitelist/:email', requireOwner, (req, res) => {
-    const { email } = req.params;
-    const { plan } = req.body;
-    if (!plan) return res.status(400).json({ error: 'Missing plan' });
+app.post('/api/owner/whitelist/sync', requireOwner, (req, res) => {
+    const { entries } = req.body;
+    if (!Array.isArray(entries)) return res.status(400).json({ error: 'Invalid entries' });
 
     try {
-        whitelist.updatePlan(email, plan);
+        // Sync whitelist entries
+        whitelist.sync(entries, req.tenant.email);
 
-        // Sync with existing tenant
-        const tenant = tenants.getByEmail(email);
-        if (tenant) {
-            const planDetails = plansMgr.getById(plan);
-            if (planDetails) {
-                tenants.update(tenant.id, {
-                    plan: plan,
-                    token_limit: planDetails.token_limit,
-                    request_limit: planDetails.request_limit,
-                    doc_limit: planDetails.doc_limit
-                });
+        // Sync corresponding tenants
+        const allPlans = plansMgr.getAll();
+        for (const entry of entries) {
+            const tenant = tenants.getByEmail(entry.email);
+            if (tenant && tenant.plan !== entry.plan) {
+                const planDetails = allPlans.find(p => p.id === entry.plan);
+                if (planDetails) {
+                    tenants.update(tenant.id, {
+                        plan: entry.plan,
+                        token_limit: planDetails.token_limit,
+                        request_limit: planDetails.request_limit,
+                        doc_limit: planDetails.doc_limit
+                    });
+                }
             }
         }
         res.json({ ok: true });
     } catch (error) {
+        console.error('❌ Whitelist sync error:', error);
         res.status(500).json({ error: error.message });
     }
 });

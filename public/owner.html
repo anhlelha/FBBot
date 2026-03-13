@@ -415,6 +415,9 @@
                         <button class="btn btn-primary" id="addWhitelistBtn">Thêm</button>
                     </div>
                     <div id="whitelistList"></div>
+                    <div id="whitelistActions" style="margin-top:20px; text-align:right; display:none;">
+                        <button class="btn btn-success" id="saveWhitelistBtn">💾 Lưu tất cả thay đổi</button>
+                    </div>
                     <div class="whitelist-note">
                         <strong>💡 Cách hoạt động:</strong> Khi user có email trong whitelist đăng nhập, hệ thống tự
                         động tạo tenant với plan <strong>whitelist</strong> (unlimited tokens, unlimited documents,
@@ -532,7 +535,6 @@
                     document.getElementById('ownerEmail').textContent = data.tenant.email;
                     loadOverview();
                     loadTenants();
-                    loadWhitelist();
                     loadPlatformSettings();
                     loadPlans();
                     loadRevenue();
@@ -629,70 +631,106 @@
 
             // Whitelist
             let cachedPlans = []; // Store plans for dropdowns
+            let localWhitelist = []; // Current local state
+            let originalWhitelistJson = ""; // For change detection
 
             async function loadWhitelist() {
                 const res = await fetch('/api/owner/whitelist');
-                const list = await res.json();
-                document.getElementById('whitelistList').innerHTML = list.map(e => `
+                localWhitelist = await res.json();
+                originalWhitelistJson = JSON.stringify(localWhitelist);
+                renderWhitelist();
+            }
+
+            function renderWhitelist() {
+                document.getElementById('whitelistList').innerHTML = localWhitelist.map(e => `
                 <div class="whitelist-item">
                   <div>
                     <div class="whitelist-email">${e.email}</div>
                     <div class="whitelist-meta" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
                         Plan: 
-                        <select onchange="updateWhitelistPlan('${e.email}', this.value)" class="form-input" style="width: auto; height: 24px; padding: 0 4px; font-size: 11px;">
+                        <select onchange="updateLocalWhitelistPlan('${e.email}', this.value)" class="form-input" style="width: auto; height: 24px; padding: 0 4px; font-size: 11px;">
                             ${cachedPlans.map(p => `
                                 <option value="${p.id}" ${e.plan === p.id ? 'selected' : ''}>${p.name}</option>
                             `).join('')}
                         </select>
-                        · Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}
+                        ${e.added_by ? `· Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}` : '<span class="badge badge-active">Mới</span>'}
                     </div>
                   </div>
-                  <button class="action-btn danger" onclick="removeWhitelist('${e.email}')">Xoá</button>
+                  <button class="action-btn danger" onclick="removeLocalWhitelist('${e.email}')">Xoá</button>
                 </div>
               `).join('');
+
+                const hasChanges = JSON.stringify(localWhitelist) !== originalWhitelistJson;
+                document.getElementById('whitelistActions').style.display = 'block';
+                const saveBtn = document.getElementById('saveWhitelistBtn');
+                saveBtn.disabled = !hasChanges;
+                saveBtn.style.opacity = hasChanges ? '1' : '0.5';
             }
 
-            window.updateWhitelistPlan = async function (email, plan) {
-                const res = await fetch('/api/owner/whitelist/' + encodeURIComponent(email), {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan })
-                });
-                if (res.ok) {
-                    loadTenants(); // Refresh tenants list in case it synced
-                    loadOverview();
-                } else {
-                    const data = await res.json();
-                    alert(data.error);
+            window.updateLocalWhitelistPlan = function (email, plan) {
+                const idx = localWhitelist.findIndex(e => e.email === email);
+                if (idx !== -1) {
+                    localWhitelist[idx].plan = plan;
+                    renderWhitelist();
                 }
+            };
+
+            window.removeLocalWhitelist = function (email) {
+                localWhitelist = localWhitelist.filter(e => e.email !== email);
+                renderWhitelist();
             };
 
             document.getElementById('addWhitelistBtn').addEventListener('click', async () => {
-                const email = document.getElementById('whitelistInput').value.trim();
+                const email = document.getElementById('whitelistInput').value.trim().toLowerCase();
                 const plan = document.getElementById('whitelistPlanSelect').value;
                 if (!email) return;
-                const res = await fetch('/api/owner/whitelist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, plan }),
+
+                if (localWhitelist.find(e => e.email === email)) {
+                    return alert('Email đã tồn tại trong danh sách tạm thời');
+                }
+
+                localWhitelist.unshift({
+                    email,
+                    plan,
+                    added_by: null, // Marks as new
+                    created_at: new Date().toISOString()
                 });
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('whitelistInput').value = '';
-                    loadWhitelist();
-                    loadOverview();
-                } else {
-                    alert(data.error);
+
+                document.getElementById('whitelistInput').value = '';
+                renderWhitelist();
+            });
+
+            document.getElementById('saveWhitelistBtn').addEventListener('click', async () => {
+                const saveBtn = document.getElementById('saveWhitelistBtn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⌛ Đang lưu...';
+
+                try {
+                    const res = await fetch('/api/owner/whitelist/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entries: localWhitelist }),
+                    });
+
+                    if (res.ok) {
+                        alert('✅ Đã lưu tất cả thay đổi thành công!');
+                        await loadWhitelist();
+                        loadTenants(); // Sync tenants view
+                    } else {
+                        const data = await res.json();
+                        alert('❌ Lỗi: ' + data.error);
+                    }
+                } catch (e) {
+                    alert('❌ Lỗi kết nối');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '💾 Lưu tất cả thay đổi';
                 }
             });
 
-            window.removeWhitelist = async function (email) {
-                if (!confirm(`Xoá ${email} khỏi whitelist?`)) return;
-                const res = await fetch('/api/owner/whitelist/' + encodeURIComponent(email), { method: 'DELETE' });
-                const data = await res.json();
-                if (res.ok) { loadWhitelist(); loadOverview(); }
-                else alert(data.error);
-            };
+            // individual remove logic is now superseded by local edit + sync
+            window.removeWhitelist = window.removeLocalWhitelist;
+
 
             // Platform Settings
             async function loadPlatformSettings() {

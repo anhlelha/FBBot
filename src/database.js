@@ -495,6 +495,39 @@ const whitelist = {
         db.prepare(`UPDATE whitelist_emails SET plan = ? WHERE email = ?`).run(planId, email.toLowerCase());
     },
 
+    sync(entries, addedBy) {
+        // entries: [{ email, plan }]
+        const transaction = db.transaction((entries) => {
+            // Get current whitelist to identify deletions
+            const current = this.getAll();
+            const currentEmails = current.map(e => e.email.toLowerCase());
+            const newEmails = entries.map(e => e.email.toLowerCase());
+
+            // 1. Delete removed emails
+            const toDelete = currentEmails.filter(email => !newEmails.includes(email));
+            for (const email of toDelete) {
+                // DON'T delete the owner email ever
+                if (email === config.OWNER_EMAIL.toLowerCase()) continue;
+                this.remove(email);
+            }
+
+            // 2. Add or Update entries
+            for (const entry of entries) {
+                const email = entry.email.toLowerCase();
+                const existing = this.getEntry(email);
+
+                if (existing) {
+                    if (existing.plan !== entry.plan) {
+                        this.updatePlan(email, entry.plan);
+                    }
+                } else {
+                    this.add(email, entry.plan, addedBy);
+                }
+            }
+        });
+        transaction(entries);
+    },
+
     getAll() {
         return db.prepare(`SELECT * FROM whitelist_emails ORDER BY created_at DESC`).all();
     },
@@ -770,41 +803,37 @@ if (!platformSettings.get('hard_guardrails')) {
     platformSettings.set('hard_guardrails', defaultHardGuardrails);
 }
 
-// Seed default Plans if table is empty (F06)
-const existingPlans = plansMgr.getAll();
-if (existingPlans.length === 0) {
-    console.log('🌱 Seeding default Plans...');
+// Seed default Plans if not exists (F06)
+function seedPlans() {
     const basicTokens = parseInt(process.env.PLAN_BASIC_TOKENS) || 50000;
     const basicPrice = parseInt(process.env.PLAN_BASIC_PRICE) || 200000;
     const proTokens = parseInt(process.env.PLAN_PRO_TOKENS) || 200000;
     const proPrice = parseInt(process.env.PLAN_PRO_PRICE) || 500000;
 
-    const basicFtrs = JSON.stringify([
-        `${basicTokens.toLocaleString()} tokens`,
-        'Base Documents ~100',
-        'Basic Support'
-    ]);
-
-    const proFtrs = JSON.stringify([
-        `${proTokens.toLocaleString()} tokens`,
-        'Unlimited Documents',
-        'Priority Support',
-        'Remove Watermark'
-    ]);
-
-    plansMgr.create('basic', 'Basic Plan', basicPrice, basicTokens, 1000, 10, basicFtrs, 1);
-    plansMgr.create('trial', 'Trial Plan', 0, config.DEFAULT_TRIAL_TOKEN_LIMIT, 1000, 10, JSON.stringify(['Limited Tokens', 'AI Chat']), 1);
-    plansMgr.create('pro', 'Pro Plan', proPrice, proTokens, 10000, -1, proFtrs, 1);
-
-    // Seed VIP Plan (F07)
+    const basicFtrs = JSON.stringify([`${basicTokens.toLocaleString()} tokens`, 'Base Documents ~100', 'Basic Support']);
+    const proFtrs = JSON.stringify([`${proTokens.toLocaleString()} tokens`, 'Unlimited Documents', 'Priority Support', 'Remove Watermark']);
+    const trialFtrs = JSON.stringify(['Limited Tokens', 'AI Chat']);
     const vipFtrs = JSON.stringify(['Unlimited Tokens', 'Unlimited Requests', 'Priority VIP Support']);
-    plansMgr.create('vip', 'VIP Plan', 0, 999999999, 999999999, 999999999, vipFtrs, 1);
 
-    // Migration: Update existing whitelisted tenants and emails
-    console.log('🔄 Migrating whitelist types to VIP plan...');
-    db.prepare(`UPDATE tenants SET plan = 'vip' WHERE plan = 'whitelist'`).run();
-    db.prepare(`UPDATE whitelist_emails SET plan = 'vip' WHERE plan IS NULL OR plan = ''`).run();
+    if (!plansMgr.getById('basic')) plansMgr.create('basic', 'Basic Plan', basicPrice, basicTokens, 1000, 10, basicFtrs, 1);
+    if (!plansMgr.getById('trial')) plansMgr.create('trial', 'Trial Plan', 0, config.DEFAULT_TRIAL_TOKEN_LIMIT, 1000, 10, trialFtrs, 1);
+    if (!plansMgr.getById('pro')) plansMgr.create('pro', 'Pro Plan', proPrice, proTokens, 10000, -1, proFtrs, 1);
+
+    // Seed VIP Plan (F07) - Always ensure it exists for Whitelist use
+    if (!plansMgr.getById('vip')) {
+        console.log('🌱 Seeding VIP Plan...');
+        plansMgr.create('vip', 'VIP Plan', 0, 999999999, 999999999, 999999999, vipFtrs, 1);
+    }
+
+    // Migration: Update existing whitelisted tenants and emails to VIP
+    const needsMigration = db.prepare(`SELECT COUNT(*) as count FROM tenants WHERE plan = 'whitelist'`).get().count > 0;
+    if (needsMigration) {
+        console.log('🔄 Migrating whitelist types to VIP plan...');
+        db.prepare(`UPDATE tenants SET plan = 'vip' WHERE plan = 'whitelist'`).run();
+        db.prepare(`UPDATE whitelist_emails SET plan = 'vip' WHERE plan IS NULL OR plan = '' OR plan = 'whitelist'`).run();
+    }
 }
+seedPlans();
 
 // Seed owner email into whitelist if not exists
 whitelist.add(config.OWNER_EMAIL, 'vip', 'system');
