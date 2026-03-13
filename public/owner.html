@@ -628,19 +628,44 @@
             };
 
             // Whitelist
+            let cachedPlans = []; // Store plans for dropdowns
+
             async function loadWhitelist() {
                 const res = await fetch('/api/owner/whitelist');
                 const list = await res.json();
                 document.getElementById('whitelistList').innerHTML = list.map(e => `
-        <div class="whitelist-item">
-          <div>
-            <div class="whitelist-email">${e.email}</div>
-            <div class="whitelist-meta">Plan: <strong>${e.plan}</strong> · Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}</div>
-          </div>
-          <button class="action-btn danger" onclick="removeWhitelist('${e.email}')">Xoá</button>
-        </div>
-      `).join('');
+                <div class="whitelist-item">
+                  <div>
+                    <div class="whitelist-email">${e.email}</div>
+                    <div class="whitelist-meta" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                        Plan: 
+                        <select onchange="updateWhitelistPlan('${e.email}', this.value)" class="form-input" style="width: auto; height: 24px; padding: 0 4px; font-size: 11px;">
+                            ${cachedPlans.map(p => `
+                                <option value="${p.id}" ${e.plan === p.id ? 'selected' : ''}>${p.name}</option>
+                            `).join('')}
+                        </select>
+                        · Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}
+                    </div>
+                  </div>
+                  <button class="action-btn danger" onclick="removeWhitelist('${e.email}')">Xoá</button>
+                </div>
+              `).join('');
             }
+
+            window.updateWhitelistPlan = async function (email, plan) {
+                const res = await fetch('/api/owner/whitelist/' + encodeURIComponent(email), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan })
+                });
+                if (res.ok) {
+                    loadTenants(); // Refresh tenants list in case it synced
+                    loadOverview();
+                } else {
+                    const data = await res.json();
+                    alert(data.error);
+                }
+            };
 
             document.getElementById('addWhitelistBtn').addEventListener('click', async () => {
                 const email = document.getElementById('whitelistInput').value.trim();
@@ -708,6 +733,8 @@
                         return;
                     }
                     const plans = await res.json();
+                    cachedPlans = plans; // Cache for whitelist dropdowns (F07)
+                    loadWhitelist(); // Refresh whitelist with actual plan names
 
                     // Update Whitelist plan selector (F07)
                     const whitelistSelect = document.getElementById('whitelistPlanSelect');

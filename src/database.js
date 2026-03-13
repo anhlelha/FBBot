@@ -491,6 +491,10 @@ const whitelist = {
         return db.prepare(`SELECT * FROM whitelist_emails WHERE email = ?`).get(email.toLowerCase());
     },
 
+    updatePlan(email, planId) {
+        db.prepare(`UPDATE whitelist_emails SET plan = ? WHERE email = ?`).run(planId, email.toLowerCase());
+    },
+
     getAll() {
         return db.prepare(`SELECT * FROM whitelist_emails ORDER BY created_at DESC`).all();
     },

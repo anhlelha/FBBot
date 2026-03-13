@@ -609,6 +609,33 @@ app.post('/api/owner/whitelist', requireOwner, (req, res) => {
     res.json({ ok: true });
 });
 
+app.put('/api/owner/whitelist/:email', requireOwner, (req, res) => {
+    const { email } = req.params;
+    const { plan } = req.body;
+    if (!plan) return res.status(400).json({ error: 'Missing plan' });
+
+    try {
+        whitelist.updatePlan(email, plan);
+
+        // Sync with existing tenant
+        const tenant = tenants.getByEmail(email);
+        if (tenant) {
+            const planDetails = plansMgr.getById(plan);
+            if (planDetails) {
+                tenants.update(tenant.id, {
+                    plan: plan,
+                    token_limit: planDetails.token_limit,
+                    request_limit: planDetails.request_limit,
+                    doc_limit: planDetails.doc_limit
+                });
+            }
+        }
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.delete('/api/owner/whitelist/:email', requireOwner, (req, res) => {
     if (req.params.email === config.OWNER_EMAIL) {
         return res.status(400).json({ error: 'Cannot remove owner email' });
