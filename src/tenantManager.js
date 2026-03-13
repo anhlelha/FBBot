@@ -36,11 +36,12 @@ async function generateResponseForTenant(tenantId, userMessage) {
     const { tenant, corpusName } = instance;
     const tenantSettings = settings.get(tenantId);
 
-    // Check token limit (skip for whitelist/pro)
-    if (tenant.plan !== 'whitelist' && tenant.plan !== 'pro') {
-        if (tenant.tokens_used >= tenant.token_limit) {
-            return 'Xin lỗi, tài khoản đã hết hạn mức token. Vui lòng nâng cấp gói để tiếp tục sử dụng.';
-        }
+    // 1. Check Usage Limits (Skip check if limit is -1 or 0)
+    if (tenant.request_limit > 0 && tenant.requests_used >= tenant.request_limit) {
+        return 'Bạn đã hết lượt request trong tháng này. Vui lòng nâng cấp gói cước để tiếp tục.';
+    }
+    if (tenant.token_limit > 0 && tenant.tokens_used >= tenant.token_limit) {
+        return 'Bạn đã hết hạn mức Token. Vui lòng nâng cấp gói cước để tiếp tục.';
     }
 
     // Search context from Vertex AI RAG Corpus
@@ -60,10 +61,10 @@ async function generateResponseForTenant(tenantId, userMessage) {
     const aiResult = await ai.generateResponse(userMessage, tenantSettings, context);
     const responseText = aiResult.text;
 
-    // Use PRECISE totalTokenCount from Gemini
-    const tokensUsed = aiResult.tokensUsed;
-
+    // 3. Update Usage (Tokens & Requests)
+    const tokensUsed = aiResult.tokensUsed || 0;
     tenants.incrementTokens(tenantId, tokensUsed);
+    tenants.incrementRequests(tenantId);
 
     // Refresh cached tenant data
     const updated = tenants.getById(tenantId);

@@ -356,19 +356,7 @@ app.post('/api/chat', requireAuth, async (req, res) => {
         const { message } = req.body;
         if (!message) return res.status(400).json({ error: 'Missing message' });
 
-        // Check limits
-        if (req.tenant.request_limit > 0 && req.tenant.requests_used >= req.tenant.request_limit) {
-            return res.status(403).json({ error: 'Bạn đã hết lượt request trong tháng này. Vui lòng nâng cấp gói cước.' });
-        }
-        if (req.tenant.token_limit > 0 && req.tenant.tokens_used >= req.tenant.token_limit) {
-            return res.status(403).json({ error: 'Bạn đã hết hạn mức Token. Vui lòng nâng cấp gói cước.' });
-        }
-
         const reply = await tenantManager.generateResponseForTenant(req.tenant.id, message);
-
-        // Increment requests
-        tenants.incrementRequests(req.tenant.id);
-
         res.json({ reply });
     } catch (error) {
         console.error('❌ Chat error:', error.message);
