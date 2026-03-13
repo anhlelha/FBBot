@@ -35,25 +35,25 @@ describe('Whitelist', () => {
     });
 
     test('add email to whitelist', () => {
-        const result = whitelist.add('partner@test.com', 'owner@test.com');
+        const result = whitelist.add('partner@test.com', 'vip', 'owner@test.com');
         expect(result).toBe(true);
         expect(whitelist.isWhitelisted('partner@test.com')).toBe(true);
     });
 
     test('duplicate email returns false', () => {
-        const result = whitelist.add('partner@test.com', 'owner@test.com');
+        const result = whitelist.add('partner@test.com', 'vip', 'owner@test.com');
         expect(result).toBe(false);
     });
 
     test('case-insensitive check', () => {
-        whitelist.add('case@test.com', 'owner@test.com');
+        whitelist.add('case@test.com', 'vip', 'owner@test.com');
         expect(whitelist.isWhitelisted('CASE@TEST.COM')).toBe(true);
     });
 
     test('remove email from whitelist', () => {
-        whitelist.add('removeme@test.com', 'owner@test.com');
-        whitelist.remove('removeme@test.com');
-        expect(whitelist.isWhitelisted('removeme@test.com')).toBe(false);
+        whitelist.add('remove@test.com', 'vip', 'owner@test.com');
+        whitelist.remove('remove@test.com');
+        expect(whitelist.isWhitelisted('remove@test.com')).toBe(false);
     });
 
     test('getAll returns all entries', () => {
@@ -79,9 +79,9 @@ describe('Tenants', () => {
     });
 
     test('create tenant (whitelisted) → whitelist plan', () => {
-        whitelist.add('vip@test.com', 'owner@test.com');
-        const tenant = tenants.create('vip@test.com', 'VIP Hotel');
-        expect(tenant.plan).toBe('whitelist');
+        whitelist.add('special@test.com', 'vip', 'owner@test.com');
+        const tenant = tenants.create('special@test.com', 'Special Hotel');
+        expect(tenant.plan).toBe('vip');
         expect(tenant.token_limit).toBe(999999999);
     });
 

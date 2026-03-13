@@ -43,9 +43,9 @@ describe('Registration Flow', () => {
     });
 
     test('whitelisted user gets unlimited whitelist plan', () => {
-        whitelist.add('vip@test.com', 'owner@test.com');
+        whitelist.add('vip@test.com', 'vip', 'owner@test.com');
         const tenant = tenants.create('vip@test.com', 'VIP Hotel');
-        expect(tenant.plan).toBe('whitelist');
+        expect(tenant.plan).toBe('vip');
         expect(tenant.token_limit).toBe(999999999);
     });
 

@@ -143,6 +143,7 @@
             gap: 12px;
             margin-bottom: 8px;
         }
+
         .rev-bar-label {
             width: 70px;
             font-size: 12px;
@@ -150,6 +151,7 @@
             text-align: right;
             flex-shrink: 0;
         }
+
         .rev-bar-track {
             flex: 1;
             height: 28px;
@@ -158,6 +160,7 @@
             overflow: hidden;
             position: relative;
         }
+
         .rev-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--color-primary), #e6a817);
@@ -168,16 +171,33 @@
             min-width: 60px;
             transition: width 0.5s ease;
         }
+
         .rev-bar-value {
             font-size: 11px;
             font-weight: 600;
             color: #fff;
             white-space: nowrap;
         }
-        .badge-paid { background: rgba(63,185,80,0.15); color: var(--color-success); }
-        .badge-pending { background: rgba(255,153,0,0.15); color: var(--color-primary); }
-        .badge-expired { background: rgba(139,148,158,0.15); color: var(--text-muted); }
-        .badge-cancelled { background: rgba(248,81,73,0.15); color: var(--color-danger); }
+
+        .badge-paid {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--color-success);
+        }
+
+        .badge-pending {
+            background: rgba(255, 153, 0, 0.15);
+            color: var(--color-primary);
+        }
+
+        .badge-expired {
+            background: rgba(139, 148, 158, 0.15);
+            color: var(--text-muted);
+        }
+
+        .badge-cancelled {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--color-danger);
+        }
     </style>
 </head>
 
@@ -329,7 +349,9 @@
                 <div class="settings-section" style="margin-top:24px">
                     <h3>Biểu đồ doanh thu theo tháng</h3>
                     <div id="revenueChart" style="margin-top:16px"></div>
-                    <p id="revenueChartEmpty" style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có dữ liệu doanh thu</p>
+                    <p id="revenueChartEmpty"
+                        style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có dữ liệu
+                        doanh thu</p>
                 </div>
 
                 <div class="settings-section" style="margin-top:24px">
@@ -347,7 +369,9 @@
                         </thead>
                         <tbody id="revenueOrders"></tbody>
                     </table>
-                    <p id="revenueOrdersEmpty" style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có đơn hàng nào</p>
+                    <p id="revenueOrdersEmpty"
+                        style="display:none;color:var(--text-muted);padding:16px;text-align:center">Chưa có đơn hàng nào
+                    </p>
                 </div>
             </div>
 
@@ -385,6 +409,9 @@
                     <h3>Thêm email mới</h3>
                     <div class="whitelist-form">
                         <input type="email" id="whitelistInput" class="form-input" placeholder="email@gmail.com">
+                        <select id="whitelistPlanSelect" class="form-input" style="width: 200px;">
+                            <!-- Populated by JS -->
+                        </select>
                         <button class="btn btn-primary" id="addWhitelistBtn">Thêm</button>
                     </div>
                     <div id="whitelistList"></div>
@@ -546,7 +573,7 @@
                         const revRes = await fetch('/api/owner/revenue');
                         const rev = await revRes.json();
                         // Update overview stats if elements exist
-                    } catch(re) {}
+                    } catch (re) { }
                 } catch (e) {
                     console.error('Error loading overview:', e);
                 }
@@ -608,7 +635,7 @@
         <div class="whitelist-item">
           <div>
             <div class="whitelist-email">${e.email}</div>
-            <div class="whitelist-meta">Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}</div>
+            <div class="whitelist-meta">Plan: <strong>${e.plan}</strong> · Added by ${e.added_by} · ${new Date(e.created_at).toLocaleDateString('vi-VN')}</div>
           </div>
           <button class="action-btn danger" onclick="removeWhitelist('${e.email}')">Xoá</button>
         </div>
@@ -617,11 +644,12 @@
 
             document.getElementById('addWhitelistBtn').addEventListener('click', async () => {
                 const email = document.getElementById('whitelistInput').value.trim();
+                const plan = document.getElementById('whitelistPlanSelect').value;
                 if (!email) return;
                 const res = await fetch('/api/owner/whitelist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify({ email, plan }),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -680,6 +708,15 @@
                         return;
                     }
                     const plans = await res.json();
+
+                    // Update Whitelist plan selector (F07)
+                    const whitelistSelect = document.getElementById('whitelistPlanSelect');
+                    if (whitelistSelect) {
+                        whitelistSelect.innerHTML = plans.filter(p => p.is_active).map(p =>
+                            `<option value="${p.id}" ${p.id === 'vip' ? 'selected' : ''}>${p.name}</option>`
+                        ).join('');
+                    }
+
                     document.getElementById('plansList').innerHTML = plans.map(p => {
                         const features = p.features ? JSON.parse(p.features) : [];
                         return `
@@ -819,7 +856,7 @@
                     document.getElementById('revCount').textContent = rev.total.count || 0;
 
                     const now = new Date();
-                    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                     const thisMonth = rev.monthly.find(m => m.month === thisMonthKey);
                     document.getElementById('revThisMonth').textContent = thisMonth ? thisMonth.revenue.toLocaleString('vi-VN') + '₫' : '0₫';
 

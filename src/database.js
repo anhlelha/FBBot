@@ -88,6 +88,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS whitelist_emails (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
+    plan TEXT NOT NULL DEFAULT 'vip', -- Associated plan ID
     added_by TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -196,6 +197,7 @@ try { db.exec("ALTER TABLE tenants ADD COLUMN request_limit INTEGER NOT NULL DEF
 try { db.exec("ALTER TABLE tenants ADD COLUMN requests_used INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
 try { db.exec("ALTER TABLE tenants ADD COLUMN doc_limit INTEGER NOT NULL DEFAULT 0;"); } catch (e) { }
 try { db.exec("ALTER TABLE tenants ADD COLUMN usage_reset_at TEXT;"); } catch (e) { }
+try { db.exec("ALTER TABLE whitelist_emails ADD COLUMN plan TEXT NOT NULL DEFAULT 'vip';"); } catch (e) { }
 
 function generateId() {
     return crypto.randomUUID();
@@ -205,11 +207,18 @@ function generateId() {
 const tenants = {
     create(email, name) {
         const id = generateId();
-        const isWhitelisted = whitelist.isWhitelisted(email);
-        const plan = isWhitelisted ? 'whitelist' : 'trial';
-        const tokenLimit = isWhitelisted ? 999999999 : config.DEFAULT_TRIAL_TOKEN_LIMIT;
-        const requestLimit = isWhitelisted ? 999999999 : 1000;
-        const docLimit = isWhitelisted ? 999999999 : 10;
+        const whitelistEntry = whitelist.getEntry(email);
+        const planId = whitelistEntry ? whitelistEntry.plan : 'trial';
+
+        let planDetails = plansMgr.getById(planId);
+        // Fallback if plan doesn't exist
+        if (!planDetails) {
+            planDetails = plansMgr.getById('trial') || { token_limit: 50000, request_limit: 1000, doc_limit: 10 };
+        }
+
+        const tokenLimit = planDetails.token_limit;
+        const requestLimit = planDetails.request_limit;
+        const docLimit = planDetails.doc_limit;
 
         // Set reset date to 1 month from now
         const resetDate = new Date();
@@ -217,7 +226,7 @@ const tenants = {
         const usageResetAt = resetDate.toISOString();
 
         db.prepare(`INSERT INTO tenants (id, email, name, plan, token_limit, request_limit, doc_limit, usage_reset_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-            .run(id, email, name, plan, tokenLimit, requestLimit, docLimit, usageResetAt);
+            .run(id, email, name, planId, tokenLimit, requestLimit, docLimit, usageResetAt);
 
         db.prepare(`INSERT INTO tenant_settings (tenant_id) VALUES (?)`)
             .run(id);
@@ -459,10 +468,10 @@ const documentChunks = {
 
 // ─── Whitelist ───
 const whitelist = {
-    add(email, addedBy) {
+    add(email, planId, addedBy) {
         const id = generateId();
         try {
-            db.prepare(`INSERT INTO whitelist_emails (id, email, added_by) VALUES (?, ?, ?)`).run(id, email.toLowerCase(), addedBy);
+            db.prepare(`INSERT INTO whitelist_emails (id, email, plan, added_by) VALUES (?, ?, ?, ?)`).run(id, email.toLowerCase(), planId || 'vip', addedBy);
             return true;
         } catch (e) {
             if (e.message.includes('UNIQUE')) return false;
@@ -476,6 +485,10 @@ const whitelist = {
 
     isWhitelisted(email) {
         return !!db.prepare(`SELECT 1 FROM whitelist_emails WHERE email = ?`).get(email.toLowerCase());
+    },
+
+    getEntry(email) {
+        return db.prepare(`SELECT * FROM whitelist_emails WHERE email = ?`).get(email.toLowerCase());
     },
 
     getAll() {
@@ -776,11 +789,21 @@ if (existingPlans.length === 0) {
     ]);
 
     plansMgr.create('basic', 'Basic Plan', basicPrice, basicTokens, 1000, 10, basicFtrs, 1);
+    plansMgr.create('trial', 'Trial Plan', 0, config.DEFAULT_TRIAL_TOKEN_LIMIT, 1000, 10, JSON.stringify(['Limited Tokens', 'AI Chat']), 1);
     plansMgr.create('pro', 'Pro Plan', proPrice, proTokens, 10000, -1, proFtrs, 1);
+
+    // Seed VIP Plan (F07)
+    const vipFtrs = JSON.stringify(['Unlimited Tokens', 'Unlimited Requests', 'Priority VIP Support']);
+    plansMgr.create('vip', 'VIP Plan', 0, 999999999, 999999999, 999999999, vipFtrs, 1);
+
+    // Migration: Update existing whitelisted tenants and emails
+    console.log('🔄 Migrating whitelist types to VIP plan...');
+    db.prepare(`UPDATE tenants SET plan = 'vip' WHERE plan = 'whitelist'`).run();
+    db.prepare(`UPDATE whitelist_emails SET plan = 'vip' WHERE plan IS NULL OR plan = ''`).run();
 }
 
 // Seed owner email into whitelist if not exists
-whitelist.add(config.OWNER_EMAIL, 'system');
+whitelist.add(config.OWNER_EMAIL, 'vip', 'system');
 
 // Seed Admin Tenant for Platform Web Chat (F05)
 const adminEmail = config.OWNER_EMAIL;

@@ -602,12 +602,10 @@ app.get('/api/owner/whitelist', requireOwner, (req, res) => {
 });
 
 app.post('/api/owner/whitelist', requireOwner, (req, res) => {
-    const { email } = req.body;
+    const { email, plan } = req.body;
     if (!email) return res.status(400).json({ error: 'Missing email' });
-
-    const added = whitelist.add(email, req.tenant.email);
-    if (!added) return res.status(409).json({ error: 'Email already in whitelist' });
-
+    const success = whitelist.add(email, plan || 'vip', req.tenant.email);
+    if (!success) return res.status(409).json({ error: 'Email already in whitelist' });
     res.json({ ok: true });
 });
 
